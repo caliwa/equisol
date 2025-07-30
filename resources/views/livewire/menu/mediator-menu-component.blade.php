@@ -1,0 +1,165 @@
+@assets
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/themes/airbnb.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/datepicker.min.js"></script>
+@endassets
+
+<div wire:init='MediatorInitialized' class="animate-window" x-data="{
+        escapeEnabled: $wire.entangle('escapeEnabled').live,
+        modalStack: [],
+        modalStackCount: $wire.entangle('modalStackCount').live,
+        checkInterval: null,
+        topModalId: null,
+        isProcessingEscape: $wire.entangle('isProcessingEscape').live,
+        lastEscapeTime: 0,
+        activeIcon: Math.floor(Math.random() * 3),
+        openModal(event) {
+            event.preventDefault();
+            event.target.blur();
+            this.escapeEnabled = false;
+            this.addTabTrapListener();
+        },
+        addTabTrapListener() {
+            document.addEventListener('keydown', this.trapTabKey);
+        },
+        removeTabTrapListener() {
+            document.removeEventListener('keydown', this.trapTabKey);
+        },
+        trapTabKey(e) {
+            if (e.key === 'Tab' && !this.escapeEnabled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+        closeTopModal() {
+            const now = Date.now();
+            // Verificar si han pasado al menos 150ms desde la última ejecución
+            if (now - this.lastEscapeTime < 150) return;
+            if (this.isProcessingEscape) return;
+            
+            this.isProcessingEscape = true;
+            this.lastEscapeTime = now;
+            
+            if (this.escapeEnabled && this.modalStack.length > 0) {
+                this.topModalId = this.modalStack[this.modalStack.length - 1];
+                $wire.dispatch('MediatorSetModalFalse', [this.topModalId]);
+                
+                if(this.topModalId === 'isVisibleConfirmValidationModal'){
+                    this.removeTabTrapListener();
+                }
+            }
+            setTimeout(() => {
+                this.isProcessingEscape = false;
+            }, 150);
+        },
+        handleEnter(event) {
+            event.preventDefault();
+            event.target.blur();
+            this.openModal(event);
+            this.startCheckingEscapeEnabled(event.target);
+        },
+        startCheckingEscapeEnabled(inputElement) {
+            if (this.checkInterval) {
+                clearInterval(this.checkInterval);
+            }
+            this.checkInterval = setInterval(() => {
+                if (this.escapeEnabled) {
+                    clearInterval(this.checkInterval);
+                    inputElement.focus();
+                }
+            }, 100);
+        },
+        isDisabledLostDemandModal: false,
+
+    }"
+    x-on:x-block-open-lost-demand-modal.window="
+        isDisabledLostDemandModal = true;
+    "
+    x-on:x-unblock-open-lost-demand-modal.window="
+        isDisabledLostDemandModal = false;
+    "
+    x-init="
+        setInterval(() => { activeIcon = Math.floor(Math.random() * 3) }, 3000);
+        escapeEnabled = true;
+        $watch('modalStack', () => {
+            modalStackCount = modalStack.length;
+        });
+    "
+    @if(config('modalescapeeventlistener.is_active')) @keydown.escape.window.prevent="closeTopModal()" @endif
+>
+
+    <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 flex items-center justify-center z-100 bg-white/10  dark:bg-black select-none"></div>
+
+    <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black select-none" style="z-index: 2147483647;">
+        <div class="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
+            <div class="flex items-center">
+                <span class="text-xl font-bold animate-pulse mt-20 ml-12 bg-gray-300 bg-opacity-60 px-1 border border-black border-opacity-30 rounded-sm">
+                Cargando
+                </span>
+                <img src="{{ asset('/gif/cargando.gif')}}" class="select-none mt-[101px] w-20 h-20 -ml-7" alt="Puntos sucesivos" />
+            </div>
+        </div>
+    </div>
+
+    <div
+        wire:offline
+        x-data="{ showButton: false }"
+        x-effect="
+            let timer;
+
+            timer = setTimeout(() => showButton = true, 30000);
+
+            return () => {
+                if (timer) clearTimeout(timer);
+            }
+        "
+        class="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50"
+    >
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg p-8 max-w-sm w-full mx-auto text-center shadow-xl">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mr-3"></i>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Sin conexión</h2>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Vaya, tu dispositivo ha perdido la conexión. La página web que estás viendo está fuera de línea.
+            </p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Este aviso desaparecerá automáticamente cuando se restablezca la conexión.
+            </p>
+            <button 
+                x-show="showButton"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-90"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                onclick="window.location.reload()" 
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-sm transition duration-300"
+            >
+                Recargar cotizador (reinicio)
+            </button>
+        </div>
+    </div>
+
+    @if($isProcessingEscape)
+        <div
+            @if(config('modalescapeeventlistener.is_active'))
+                class="fixed bottom-4 left-4 z-999 bg-gray-900 bg-opacity-80 text-white font-bold px-3 py-1.5 rounded-lg shadow-lg transition-opacity duration-300 opacity-100"
+            @else
+                class="fixed bottom-4 left-4 z-999 bg-gray-900 bg-opacity-80 text-white font-bold px-3 py-1.5 rounded-lg shadow-lg transition-opacity duration-300 opacity-0"
+            @endif
+            >
+            @if(config('modalescapeeventlistener.is_active'))
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">⎵</span>
+                    <span class="text-2xl">ESC detectado</span>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    <livewire:menu.index-menu-component wire:key="imc-1"/>
+
+    <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/>
+
+    <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
+
+</div>

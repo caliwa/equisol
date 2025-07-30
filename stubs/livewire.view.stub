@@ -1,0 +1,38 @@
+<div x-data="{
+    isVisibleModalFlow: $wire.entangle('isVisibleModalFlow').live,
+}"
+@if(config('modalescapeeventlistener.is_active')) @keydown.escape.window.prevent="closeTopModal()" @endif
+>
+{{-- MARK: Modal --}}
+@if($isVisibleModalFlow)
+<div x-show="isVisibleModalFlow"
+    x-effect="
+        if (isVisibleModalFlow && !modalStack.includes('isVisibleModalFlow')) {
+            modalStack.push('isVisibleModalFlow');
+            escapeEnabled = true; removeTabTrapListener();
+        } else if (!isVisibleModalFlow) {
+            modalStack = modalStack.filter(id => id !== 'isVisibleModalFlow');
+            const element = document.getElementById('isVisibleModalFlow');
+            if(element){
+                element.classList.add('fade-out-scale');
+            }
+        }
+        focusModal(modalStack[modalStack.length - 1]);
+    "
+    >
+    <div class="fixed top-0 left-0 w-screen h-screen bg-gray-900/50 backdrop-blur-lg"
+    style="z-index: {{$zIndexModal}};"></div>
+</div>
+<div x-show="isVisibleModalFlow"
+  x-transition:leave="transition ease-in duration-100"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-90" id="isVisibleModalFlow"
+    class="fixed inset-0 items-center justify-center overflow-x-hidden overflow-y-auto transform-gpu top-4 md:inset-0 h-modal sm:h-full fade-in-scale"
+    style="z-index: {{$zIndexModal + 1}};">
+    <div class="relative w-full h-full">
+    {{-- [quote] --}}
+    </div>
+</div>
+@endif
+
+</div>
