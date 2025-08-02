@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('origins', function (Blueprint $table) {
+        Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // E.g., 'Italia', 'China'
+            $table->string('code', 3)->unique(); // E.g., 'USD', 'EUR'
+            $table->string('name'); // E.g., 'US Dollar', 'Euro'
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('origins');
+        Schema::dropIfExists('currencies');
     }
 };
