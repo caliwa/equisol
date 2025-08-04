@@ -1,9 +1,3 @@
-@assets
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/themes/airbnb.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/datepicker.min.js"></script>
-@endassets
-
 <div wire:init='MediatorInitialized' class="animate-window" x-data="{
         escapeEnabled: $wire.entangle('escapeEnabled').live,
         modalStack: [],
@@ -13,7 +7,7 @@
         isProcessingEscape: $wire.entangle('isProcessingEscape').live,
         lastEscapeTime: 0,
         activeIcon: Math.floor(Math.random() * 3),
-        openModal(event) {
+        blockInteractions(event) {
             event.preventDefault();
             event.target.blur();
             this.escapeEnabled = false;
@@ -26,9 +20,17 @@
             document.removeEventListener('keydown', this.trapTabKey);
         },
         trapTabKey(e) {
-            if (e.key === 'Tab' && !this.escapeEnabled) {
+            const key = e.key;
+
+            if ((key === 'Tab' || key === 'Escape') && !this.escapeEnabled) {
                 e.stopPropagation();
                 e.preventDefault();
+            }
+        },
+        blockClick(event) {
+            if (!this.escapeEnabled) {
+                event.stopPropagation();
+                event.preventDefault();
             }
         },
         closeTopModal() {
@@ -55,7 +57,7 @@
         handleEnter(event) {
             event.preventDefault();
             event.target.blur();
-            this.openModal(event);
+            this.blockInteractions(event);
             this.startCheckingEscapeEnabled(event.target);
         },
         startCheckingEscapeEnabled(inputElement) {
@@ -69,28 +71,37 @@
                 }
             }, 100);
         },
-        isDisabledLostDemandModal: false,
+        modalDichotomicHeading: '',
+        modalDichotomicMessage: '',
+        modalDichotomicMethod: '',
+        modalDichotomicParam: null,
+        prepareDeletion({ method, param, heading, message }) {
+            this.modalDichotomicMethod = method;
+            this.modalDichotomicParam = param;
+            this.modalDichotomicHeading = heading;
+            this.modalDichotomicMessage = message;
+        },
 
     }"
-    x-on:x-block-open-lost-demand-modal.window="
-        isDisabledLostDemandModal = true;
-    "
-    x-on:x-unblock-open-lost-demand-modal.window="
-        isDisabledLostDemandModal = false;
-    "
     x-init="
         setInterval(() => { activeIcon = Math.floor(Math.random() * 3) }, 3000);
         escapeEnabled = true;
         $watch('modalStack', () => {
             modalStackCount = modalStack.length;
         });
+        document.addEventListener('click', e => blockClick(e), true);
+
     "
-    @if(config('modalescapeeventlistener.is_active')) @keydown.escape.window.prevent="closeTopModal()" @endif
 >
+    {{-- <div id="bg-validation-input" 
+            class="fixed inset-0 flex items-center justify-center bg-white/50" 
+            style="z-index: 2147483647 !important; position: fixed !important;" 
+            x-show="!escapeEnabled">
+            </div> --}}
 
-    <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 flex items-center justify-center z-100 bg-white/10  dark:bg-black select-none"></div>
+    {{-- <div id="bg-validation-input" style="z-index: 2147483647;"  x-show="!escapeEnabled" class="absolute inset-0 flex items-center justify-center bg-white/50  "></div> --}}
 
-    <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black select-none" style="z-index: 2147483647;">
+    {{-- <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black select-none" style="z-index: 2147483647;">
         <div class="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
             <div class="flex items-center">
                 <span class="text-xl font-bold animate-pulse mt-20 ml-12 bg-gray-300 bg-opacity-60 px-1 border border-black border-opacity-30 rounded-sm">
@@ -99,7 +110,7 @@
                 <img src="{{ asset('/gif/cargando.gif')}}" class="select-none mt-[101px] w-20 h-20 -ml-7" alt="Puntos sucesivos" />
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <div
         wire:offline

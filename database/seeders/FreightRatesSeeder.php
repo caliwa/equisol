@@ -32,7 +32,7 @@ class FreightRatesSeeder extends Seeder
             // 3. Definir los niveles de peso (reutilizamos los existentes si es posible)
             $weightTiersData = [
                 ['label' => '<45', 'min_weight' => 0, 'max_weight' => 44, 'display_order' => 1],
-                ['label' => '≥45', 'min_weight' => 45, 'max_weight' => 99, 'display_order' => 2],
+                ['label' => '>=45', 'min_weight' => 45, 'max_weight' => 99, 'display_order' => 2],
                 ['label' => '100', 'min_weight' => 100, 'max_weight' => 249, 'display_order' => 3],
                 ['label' => '250', 'min_weight' => 250, 'max_weight' => 299, 'display_order' => 4],
                 ['label' => '300', 'min_weight' => 300, 'max_weight' => 499, 'display_order' => 5],

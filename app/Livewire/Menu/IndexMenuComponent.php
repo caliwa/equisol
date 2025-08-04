@@ -7,37 +7,80 @@ use App\Models\Rate;
 use App\Models\Origin;
 use App\Models\Service;
 use Livewire\Component;
+use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
+use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\Collection;
+use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 
 class IndexMenuComponent extends Component
 {
+    use AdapterValidateLivewireInputTrait;
+    
     public array $table_columns = [];
     public array $rows_data = [];
+    public array $service_currencies = [];
     
-    public string $serviceTypeName = 'Pick Up Aéreo'; 
+    public string $type_service = 'pu_aereo';
+    
+    public string $serviceTypeName = 'Pick Up Aéreo';
+
+    #[Validate('required', message: 'Debe seleccionar un operador.')]
+    public string $selectedOperator = '';
+    #[Validate('required', message: 'Debe ingresar un valor numérico.')]
+    #[Validate('numeric', message: 'El valor debe ser un número.')]
+    #[Validate('min:0.01', message: 'El valor debe ser mayor a 0.')]
+    #[Validate('max:999999.99', message: 'El valor no puede ser mayor a 999999.99.')]
+    public float $numericValueTariff;
+    public $rowIndexTariff;
+    public $columnNameTariff;
+
+    public bool $enableCurrencyFeature = true;
+    public bool $showCurrencyRow = true;
+    public Collection $currencies;
+
+    #[Validate('required', message: 'Debe ingresar un nombre para el país.')]
+    #[Validate('min:3', message: 'El nombre del país debe tener al menos 3 caracteres.')]
+    #[Validate('unique:origins,name', message: 'El país ya existe.')]
+    public string $newColumnName = '';
 
     public function mount()
     {
+        // Solo cargamos las monedas si la función está activada para esta tabla.
+        if ($this->enableCurrencyFeature) {
+            $this->currencies = Currency::all();
+        }
         $this->loadRateTableData();
+    }
+
+    public function toggleCurrencyRow()
+    {
+        $this->showCurrencyRow = !$this->showCurrencyRow;
     }
 
     public function loadRateTableData()
     {
         $serviceType = ServiceType::firstOrCreate(['name' => $this->serviceTypeName]);
 
-        $services = Service::where('service_type_id', $serviceType->id)
+        $query = Service::where('service_type_id', $serviceType->id)
             ->with(['origin', 'rates.weightTier'])
             ->whereHas('origin')
             ->join('origins', 'services.origin_id', '=', 'origins.id')
             ->orderBy('origins.name')
-            ->select('services.*')
-            ->get();
+            ->select('services.*');
 
+        // Si la función de moneda está activada, también cargamos esa relación.
+        if ($this->enableCurrencyFeature) {
+            $query->with('currency');
+        }
+        
+        $services = $query->get();
         $weightTiers = WeightTier::orderBy('display_order')->get();
 
-        $this->table_columns = [['id' => 'tier_label', 'name' => 'tier_label', 'label' => 'Tarifa']];
+        $this->table_columns = [['id' => 'tier_label', 'name' => 'tier_label', 'label' => '']]; //Tarifa
         foreach ($services as $service) {
             $this->table_columns[] = [
                 'id' => $service->id,
@@ -45,6 +88,10 @@ class IndexMenuComponent extends Component
                 'label' => $service->origin->name,
                 'origin_id' => $service->origin_id
             ];
+        }
+
+        if ($this->enableCurrencyFeature) {
+            $this->service_currencies = $services->pluck('currency_id', 'id')->map(fn ($id) => $id ?? '')->toArray();
         }
 
         $this->rows_data = [];
@@ -62,20 +109,31 @@ class IndexMenuComponent extends Component
             }
             $this->rows_data[] = $currentRow;
         }
+        // dd($this->table_columns );
+        // dd([$this->rows_data, $this->table_columns]);
     }
 
     public function save()
     {
         DB::transaction(function () {
+            // Guardar nombres de países
             foreach ($this->table_columns as $column) {
                 if (isset($column['origin_id'])) {
                     Origin::where('id', $column['origin_id'])->update(['name' => $column['label']]);
                 }
             }
+
+            // Guardar monedas (si la función está activada)
+            if ($this->enableCurrencyFeature) {
+                foreach ($this->service_currencies as $serviceId => $currencyId) {
+                    Service::where('id', $serviceId)->update(['currency_id' => $currencyId ?: null]);
+                }
+            }
+
+            // Guardar tarifas y mínimos
             foreach ($this->rows_data as $row) {
                 $tierId = $row['tier_id'];
                 $tierLabel = $row['tier_label'];
-
                 if (is_null($tierId) && $tierLabel === 'Mínima') {
                     foreach ($row as $key => $value) {
                         if (str_starts_with($key, 'service_')) {
@@ -99,12 +157,43 @@ class IndexMenuComponent extends Component
         $this->loadRateTableData();
     }
 
-    public function addRow($label)
+    public function addRow()
     {
-        if (empty($label)) {
-            Flux::toast('La etiqueta de la fila no puede estar vacía.', 'error');
+        $variables_to_validate = [
+            'selectedOperator',
+            'numericValueTariff',
+        ];
+
+        try {
+            $this->validateLivewireInput($variables_to_validate);
+        } catch (\Exception $e) {
+            $this->dispatch('EscapeEnabled');
+            $this->validateLivewireInput($variables_to_validate);
+        }
+
+        $formattedValue = $this->numericValueTariff + 0;
+
+        $label = $this->selectedOperator . $formattedValue;
+
+        try {
+            Validator::make(
+                ['label' => $label],
+                ['label' => 'unique:weight_tiers,label'], 
+                ['label.unique' => 'La tarifa "' . $label . '" ya existe.']
+            )->validate();
+        } catch (\Exception $e) {
+            $this->dispatch('EscapeEnabled');
+            $this->addError('numericValueTariff', $e->getMessage());
             return;
         }
+
+        if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+            $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $label;
+            $this->save();
+            Flux::modal('operand-modal')->close();
+            return;
+        }
+
         $lastTier = WeightTier::orderBy('display_order', 'desc')->first();
         WeightTier::create([
             'label' => $label,
@@ -112,16 +201,23 @@ class IndexMenuComponent extends Component
             'max_weight' => ($lastTier->max_weight ?? 0) + 1000,
             'display_order' => ($lastTier->display_order ?? 0) + 1,
         ]);
+        Flux::modal('operand-modal')->close();
+        Flux::toast('Tarifa agregada correctamente.', 'Éxito');
+
         $this->loadRateTableData();
     }
 
-    public function addColumn($name)
+    public function addColumn()
     {
-        if (empty($name)) {
-            Flux::toast('El nombre del país no puede estar vacío.', 'error');
-            return;
-        }
-        DB::transaction(function () use ($name) {
+        // sleep(59);
+        $variables_to_validate = [
+            'newColumnName',
+        ];
+
+        $this->validateLivewireInput($variables_to_validate);
+
+        DB::transaction(function () {
+            $name = $this->newColumnName;
             $serviceType = ServiceType::firstOrCreate(['name' => $this->serviceTypeName]);
             $origin = Origin::create(['name' => $name]);
             Service::create([
@@ -130,37 +226,39 @@ class IndexMenuComponent extends Component
                 'minimum_charge' => 0,
             ]);
         });
+        $this->reset(['newColumnName']);
+        Flux::toast('Campo agregado correctamente.', 'Éxito');
         $this->loadRateTableData();
     }
 
-    /**
-     * Elimina una columna (Servicio, Origen y sus tarifas).
-     */
     public function removeColumn($serviceId)
     {
         DB::transaction(function() use ($serviceId) {
             $service = Service::find($serviceId);
             if ($service) {
                 $origin = $service->origin;
-                // El onDelete('cascade') de la migración se encarga de las tarifas.
                 $service->delete();
-                // Opcional: borrar el origen si no tiene más servicios.
                 if ($origin && !$origin->services()->exists()) {
                     $origin->delete();
                 }
             }
         });
+        Flux::toast('País eliminado correctamente.', 'Éxito');
+        Flux::modal('dichotomic-modal')->close();
         $this->loadRateTableData();
     }
 
-    /**
-     * Elimina una fila (WeightTier y sus tarifas).
-     */
     public function removeRow($tierId)
     {
-        // El onDelete('cascade') se encargará de borrar las tarifas asociadas.
+        // sleep(50);
         WeightTier::destroy($tierId);
+        Flux::toast('Tarifa eliminada correctamente.', 'Éxito');
+        Flux::modal('dichotomic-modal')->close();
         $this->loadRateTableData();
+    }
+
+    public function resetValidationWrapper(){
+        $this->resetErrorBag();
     }
 
     public function render()
