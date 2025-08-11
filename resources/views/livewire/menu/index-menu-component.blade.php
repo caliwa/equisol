@@ -25,6 +25,35 @@
     </flux:breadcrumbs>
 
     {{-- <flux:modal name="dichotomic-modal" class="min-w-[22rem]" :dismissible="false"> --}}
+
+    <flux:modal
+        x-data="{ isLoadingTariffModal: false }" 
+        name="minimum-tariff-modal" class="min-w-[22rem]" x-on:close="isLoadingTariffModal = false; escapeEnabled = true;">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg"></flux:heading>
+                <flux:text class="mt-2">
+                    <span x-text="modalDichotomicMessage"></span>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancelar</flux:button>
+                </flux:modal.close>
+                <flux:button @click="blockInteractions($event)" x-on:click="isLoadingDichotomicModal = true; $wire.call(modalDichotomicMethod, modalDichotomicParam)" variant="danger">
+                    <template x-if="isLoadingDichotomicModal">
+                        <flux:icon.loading />
+                    </template>
+
+                    <template x-if="!isLoadingDichotomicModal">
+                        <span>Borrar</span>
+                    </template>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    
     <flux:modal
         x-data="{ isLoadingDichotomicModal: false }" 
         name="dichotomic-modal" class="min-w-[22rem]" x-on:close="isLoadingDichotomicModal = false; escapeEnabled = true;">
@@ -251,7 +280,11 @@
                                 @elseif($rowIndex == 0)
                                      <flux:modal.trigger name="minimum-tariff-modal">
                                         <flux:tooltip flux:tooltip content="Oprime para configurar la Tarifa Mínima" placement="top">
-                                            <flux:badge class="cursor-pointer" variant="solid" icon="currency-dollar" size="lg" color="zinc">{{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
+                                            <flux:badge class="cursor-pointer" variant="solid" icon="currency-dollar" size="lg" color="zinc"
+                                            @click="parseAndSetTariff('{{ $rows_data[$rowIndex][$column['name']] }}',
+                                                                            {{ $rowIndex }},
+                                                                            '{{ $column['name'] }}');"
+                                            >{{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
                                         </flux:tooltip>
                                     </flux:modal.trigger>
                                 
