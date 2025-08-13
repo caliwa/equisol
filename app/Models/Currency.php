@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Currency extends Model
 {
     use HasFactory;
+
+    protected $table = 'currencies_master';
+
     protected $fillable = ['code', 'name'];
 
     /**

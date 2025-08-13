@@ -75,11 +75,13 @@
         modalDichotomicMessage: '',
         modalDichotomicMethod: '',
         modalDichotomicParam: null,
-        prepareDeletion({ method, param, heading, message }) {
+        modalDichotomicBtnText: '',
+        prepareDichotomic({ method, param, heading, message, modalDichotomicBtnText}) {
             this.modalDichotomicMethod = method;
             this.modalDichotomicParam = param;
             this.modalDichotomicHeading = heading;
             this.modalDichotomicMessage = message;
+            this.modalDichotomicBtnText = modalDichotomicBtnText;
         },
 
     }"

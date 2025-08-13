@@ -18,7 +18,7 @@ return new class extends Migration
             
             // ACTUALIZACIÓN: La moneda ahora es opcional (nullable) para servicios como 'pickup'
             // que no tienen una moneda asociada directamente en la tabla de tarifas.
-            $table->foreignId('currency_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('currency_id')->nullable()->constrained('currencies_master')->onDelete('set null');
             
             // La tarifa mínima pertenece aquí, ya que es específica del servicio.
             $table->decimal('minimum_charge', 10, 2);

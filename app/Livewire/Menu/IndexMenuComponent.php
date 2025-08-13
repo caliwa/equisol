@@ -7,6 +7,7 @@ use App\Models\Rate;
 use App\Models\Origin;
 use App\Models\Service;
 use Livewire\Component;
+use Nnjeim\World\World;
 use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
@@ -19,7 +20,7 @@ use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 class IndexMenuComponent extends Component
 {
     use AdapterValidateLivewireInputTrait;
-    
+
     public array $table_columns = [];
     public array $rows_data = [];
     public array $service_currencies = [];
@@ -28,15 +29,21 @@ class IndexMenuComponent extends Component
     
     public string $serviceTypeName = 'Pick Up Aéreo';
 
-    #[Validate('required', message: 'Debe seleccionar un operador.')]
+    #[Validate('required', message: 'VALIDACIÓN: Debe seleccionar un operador.')]
     public string $selectedOperator = '';
-    #[Validate('required', message: 'Debe ingresar un valor numérico.')]
-    #[Validate('numeric', message: 'El valor debe ser un número.')]
-    #[Validate('min:0.01', message: 'El valor debe ser mayor a 0.')]
-    #[Validate('max:999999.99', message: 'El valor no puede ser mayor a 999999.99.')]
+    #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
+    #[Validate('numeric', message: 'VALIDACIÓN: El valor debe ser un número.')]
+    #[Validate('min:0.01', message: 'VALIDACIÓN: El valor debe ser mayor a 0.')]
+    #[Validate('max:999999.99', message: 'VALIDACIÓN: El valor no puede ser mayor a 999999.99.')]
     public float $numericValueTariff;
     public $rowIndexTariff;
     public $columnNameTariff;
+
+    // #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
+    // #[Validate('numeric', message: 'VALIDACIÓN: El valor debe ser un número.')]
+    // #[Validate('min:0.01', message: 'VALIDACIÓN: El valor debe ser mayor a 0.')]
+    // #[Validate('max:999999.99', message: 'VALIDACIÓN: El valor no puede ser mayor a 999999.99.')]
+    // public float $numericMinimumTariffValue;
 
     public bool $enableCurrencyFeature = true;
     public bool $showCurrencyRow = true;
@@ -47,13 +54,36 @@ class IndexMenuComponent extends Component
     #[Validate('unique:origins,name', message: 'El país ya existe.')]
     public string $newColumnName = '';
 
+    public $countries = [];
+
     public function mount()
     {
+
+        $action = World::setLocale('es')->countries(['fields' => 'iso2']);
+
+        if ($action->success) {
+            $this->countries = $action->data;
+        }
+
         // Solo cargamos las monedas si la función está activada para esta tabla.
         if ($this->enableCurrencyFeature) {
             $this->currencies = Currency::all();
         }
         $this->loadRateTableData();
+    }
+
+    function getFlagEmoji(string $countryCode): string
+    {
+        if (strlen($countryCode) !== 2) {
+            return '';
+        }
+
+        $codePoints = array_map(
+            fn($char) => 127397 + ord(strtoupper($char)),
+            str_split($countryCode)
+        );
+
+        return mb_convert_encoding('&#' . implode(';&#', $codePoints) . ';', 'UTF-8', 'HTML-ENTITIES');
     }
 
     public function toggleCurrencyRow()
@@ -155,6 +185,76 @@ class IndexMenuComponent extends Component
         });
         Flux::toast('Datos guardados correctamente.');
         $this->loadRateTableData();
+        $this->dispatch('EscapeEnabled');
+    }
+
+    public function editCountry($dict){
+        $dict = (array)json_decode($dict);
+
+        $country_name = $dict['country_name'] ?? null;
+        $colIndex = $dict['colIndex'] ?? null;
+
+        $this->table_columns[$colIndex]['label'] = $country_name;
+
+        foreach ($this->table_columns as $column) {
+            if (isset($column['origin_id'])) {
+                Origin::where('id', $column['origin_id'])->update(['name' => $column['label']]);
+            }
+        }
+
+        Flux::toast('Datos guardados correctamente.');
+        $this->loadRateTableData();
+        $this->dispatch('EscapeEnabled');
+        Flux::modal('dichotomic-modal')->close();
+    }
+
+    public function addRowPercentage(){
+        $variables_to_validate = [
+            'numericValueTariff',
+        ];
+
+        try {
+            $this->validateLivewireInput($variables_to_validate);
+        } catch (\Exception $e) {
+            $this->dispatch('x-unblock-loading-percentage-modal');
+            $this->dispatch('EscapeEnabled');
+            $this->validateLivewireInput($variables_to_validate);
+        }
+
+        $formattedValue = $this->numericValueTariff + 0;
+
+        if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+
+            $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
+            $this->save();
+            Flux::modal('percentage-modal')->close();
+            Flux::toast('Porcentaje modificado correctamente.', 'Éxito');
+            return;
+        }
+    }
+
+    public function addRowTariff(){
+        $variables_to_validate = [
+            'numericValueTariff',
+        ];
+
+        try {
+            $this->validateLivewireInput($variables_to_validate);
+        } catch (\Exception $e) {
+            $this->dispatch('x-unblock-loading-tariff-modal');
+            $this->dispatch('EscapeEnabled');
+            $this->validateLivewireInput($variables_to_validate);
+        }
+
+        $formattedValue = $this->numericValueTariff + 0;
+
+        if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+            $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
+            $this->save();
+            Flux::modal('minimum-tariff-modal')->close();
+            Flux::toast('Tarifa agregada correctamente.', 'Éxito');
+            return;
+        }
     }
 
     public function addRow()
@@ -209,7 +309,6 @@ class IndexMenuComponent extends Component
 
     public function addColumn()
     {
-        // sleep(59);
         $variables_to_validate = [
             'newColumnName',
         ];

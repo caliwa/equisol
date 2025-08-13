@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('currencies', function (Blueprint $table) {
+        Schema::create('currencies_master', function (Blueprint $table) {
             $table->id();
             $table->string('code', 3)->unique(); // E.g., 'USD', 'EUR'
             $table->string('name'); // E.g., 'US Dollar', 'Euro'
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('currencies');
+        Schema::dropIfExists('currencies_master');
     }
 };
