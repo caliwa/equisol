@@ -32,7 +32,7 @@ class [class] extends Component
 
         $this->isVisible[class] = true;
         
-        $this->dispatch('EscapeEnabled');
+        $this->dispatch('escape-enabled');
     }
 
     public function ResetModalVariables(){

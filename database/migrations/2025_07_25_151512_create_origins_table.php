@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('origins', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // E.g., 'Italia', 'China'
+            $table->string('name'); // E.g., 'Italia', 'China'
             $table->timestamps();
         });
     }

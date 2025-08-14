@@ -1,5 +1,6 @@
 <div wire:init='MediatorInitialized' class="animate-window" x-data="{
-        escapeEnabled: $wire.entangle('escapeEnabled').live,
+        escapeEnabled: null,
+        loadingSpinnerEnabled: null,
         modalStack: [],
         modalStackCount: $wire.entangle('modalStackCount').live,
         checkInterval: null,
@@ -7,8 +8,12 @@
         isProcessingEscape: $wire.entangle('isProcessingEscape').live,
         lastEscapeTime: 0,
         activeIcon: Math.floor(Math.random() * 3),
+        loadingSpinner(event) {
+            this.loadingSpinnerEnabled = true;
+            this.blockInteractions(event);
+        },
         blockInteractions(event) {
-        {{-- e.preventDefault(); --}}
+            event.preventDefault();
             event.target.blur();
             this.escapeEnabled = false;
             this.addTabTrapListener();
@@ -24,13 +29,13 @@
 
             if ((key === 'Tab' || key === 'Escape') && !this.escapeEnabled) {
                 e.stopPropagation();
-                {{-- e.preventDefault(); --}}
+                e.preventDefault();
             }
         },
         blockClick(event) {
             if (!this.escapeEnabled) {
                 event.stopPropagation();
-                {{-- event.preventDefault(); --}}
+                event.preventDefault();
             }
         },
         closeTopModal() {
@@ -55,7 +60,7 @@
             }, 150);
         },
         handleEnter(event) {
-            {{-- event.preventDefault(); --}}
+            event.preventDefault();
             event.target.blur();
             this.blockInteractions(event);
             this.startCheckingEscapeEnabled(event.target);
@@ -82,15 +87,31 @@
             this.modalDichotomicHeading = heading;
             this.modalDichotomicMessage = message;
             this.modalDichotomicBtnText = modalDichotomicBtnText;
+            const modal = $flux.modal('dichotomic-modal');
+            if (modal) {
+                modal.show();
+            } else {
+                console.warn('Modal no encontrado');
+            }
         },
 
     }"
+    x-on:escape-enabled.window="
+        escapeEnabled = false;
+        escapeEnabled = true;
+        loadingSpinnerEnabled = false;
+    "
+    x-on:escape-disabled.window="
+        escapeEnabled = false;
+        loadingSpinnerEnabled = true;
+    "
     x-init="
         setInterval(() => { activeIcon = Math.floor(Math.random() * 3) }, 3000);
         escapeEnabled = true;
-        $watch('modalStack', () => {
+        loadingSpinnerEnabled = false;
+        {{-- $watch('modalStack', () => {
             modalStackCount = modalStack.length;
-        });
+        }); --}}
         document.addEventListener('click', e => blockClick(e), true);
 
     "
@@ -103,16 +124,13 @@
 
     {{-- <div id="bg-validation-input" style="z-index: 2147483647;"  x-show="!escapeEnabled" class="absolute inset-0 flex items-center justify-center bg-white/50  "></div> --}}
 
-    {{-- <div id="bg-validation-input" x-show="!escapeEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black select-none" style="z-index: 2147483647;">
+    <div id="bg-validation-input" x-show="loadingSpinnerEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black/30 bg-white/30 select-none" style="z-index: 2147483647;">
         <div class="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
             <div class="flex items-center">
-                <span class="text-xl font-bold animate-pulse mt-20 ml-12 bg-gray-300 bg-opacity-60 px-1 border border-black border-opacity-30 rounded-sm">
-                Cargando
-                </span>
-                <img src="{{ asset('/gif/cargando.gif')}}" class="select-none mt-[101px] w-20 h-20 -ml-7" alt="Puntos sucesivos" />
+                <flux:icon.loading />
             </div>
         </div>
-    </div> --}}
+    </div> 
 
     <div
         wire:offline

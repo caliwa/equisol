@@ -30,7 +30,7 @@ class DichotomicAskingModalComponent extends Component
         $this->message = $this->dict["message"];
         $this->livewire_dispatch = $this->dict["livewire_dispatch"];
         $this->isVisibleDichotomicAskingModal = true;
-        $this->dispatch('EscapeEnabled');
+        $this->dispatch('escape-enabled');
     }
 
     public function DoDispatch(){

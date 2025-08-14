@@ -40,7 +40,7 @@ class ConfirmValidationModalComponent extends Component
             }
         }
         $this->isVisibleConfirmValidationModal = true;
-        $this->dispatch('EscapeEnabled');
+        $this->dispatch('escape-enabled');
     }
 
     public function ResetModalVariables(){

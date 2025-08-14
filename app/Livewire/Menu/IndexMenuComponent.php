@@ -11,6 +11,7 @@ use Nnjeim\World\World;
 use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
+use Livewire\Attributes\Isolate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
 use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 
+#[Isolate]
 class IndexMenuComponent extends Component
 {
     use AdapterValidateLivewireInputTrait;
@@ -25,9 +27,7 @@ class IndexMenuComponent extends Component
     public array $table_columns = [];
     public array $rows_data = [];
     public array $service_currencies = [];
-    
     public string $type_service = 'pu_aereo';
-    
     public string $serviceTypeName = 'Pick Up Aéreo';
 
     #[Validate('required', message: 'VALIDACIÓN: Debe seleccionar un operador.')]
@@ -87,6 +87,7 @@ class IndexMenuComponent extends Component
     {
         $this->serviceTypeName = $serviceTypeName;
         $this->loadRateTableData();
+        $this->dispatch('escape-enabled');
     }
 
     function getFlagEmoji(string $countryCode): string
@@ -106,6 +107,7 @@ class IndexMenuComponent extends Component
     public function toggleCurrencyRow()
     {
         $this->showCurrencyRow = !$this->showCurrencyRow;
+        $this->dispatch('escape-enabled');
     }
 
     public function loadRateTableData()
@@ -202,7 +204,7 @@ class IndexMenuComponent extends Component
         });
         Flux::toast('Datos guardados correctamente.');
         $this->loadRateTableData();
-        $this->dispatch('EscapeEnabled');
+        $this->dispatch('escape-enabled');
     }
 
     public function editCountry($dict)
@@ -268,9 +270,9 @@ class IndexMenuComponent extends Component
             return false;
         }finally{
             if ($success) {
-                Flux::toast('Datos guardados correctamente.');
+                Flux::toast('Edición de país realizada éxitosamente.');
                 $this->loadRateTableData();
-                $this->dispatch('EscapeEnabled');
+                $this->dispatch('escape-enabled');
             }
             Flux::modal('dichotomic-modal')->close();
         }
@@ -287,7 +289,7 @@ class IndexMenuComponent extends Component
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Exception $e) {
             $this->dispatch('x-unblock-loading-percentage-modal');
-            $this->dispatch('EscapeEnabled');
+            $this->dispatch('escape-enabled');
             $this->validateLivewireInput($variables_to_validate);
         }
 
@@ -312,7 +314,7 @@ class IndexMenuComponent extends Component
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Exception $e) {
             $this->dispatch('x-unblock-loading-tariff-modal');
-            $this->dispatch('EscapeEnabled');
+            $this->dispatch('escape-enabled');
             $this->validateLivewireInput($variables_to_validate);
         }
 
@@ -337,7 +339,7 @@ class IndexMenuComponent extends Component
         try {
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Exception $e) {
-            $this->dispatch('EscapeEnabled');
+            $this->dispatch('escape-enabled');
             $this->validateLivewireInput($variables_to_validate);
         }
 
@@ -352,7 +354,7 @@ class IndexMenuComponent extends Component
                 ['label.unique' => 'La tarifa "' . $label . '" ya existe.']
             )->validate();
         } catch (\Exception $e) {
-            $this->dispatch('EscapeEnabled');
+            $this->dispatch('escape-enabled');
             $this->addError('numericValueTariff', $e->getMessage());
             return;
         }
@@ -415,7 +417,7 @@ class IndexMenuComponent extends Component
             return;
         }
 
-        $this->reset(['newColumnName', 'serviceTypeName']);
+        $this->reset(['newColumnName']);
         Flux::toast('Combinación agregada correctamente.', 'Éxito');
         $this->loadRateTableData();
     }

@@ -7,10 +7,11 @@
             if (matches) {
                 // matches[1] es el operador (ej: '<=')
                 // matches[2] es el número (ej: '50')
-                this.$wire.set('selectedOperator', matches[1]);
-                this.$wire.set('numericValueTariff', matches[2]);
-                this.$wire.set('rowIndexTariff', rowIndex);
-                this.$wire.set('columnNameTariff', columnName);
+                $wire.selectedOperator = matches[1];
+                $wire.numericValueTariff = matches[2];
+                $wire.rowIndexTariff = rowIndex;
+                $wire.columnNameTariff = columnName;
+                $flux.modal('operand-modal').show()
             } else {
                 console.warn('El formato de la tarifa no es válido:', inputValue);
             }
@@ -50,7 +51,9 @@
         <flux:callout variant="warning" icon="exclamation-circle" heading="Ten en cuenta que cualquier cambio alterará los cálculos futuros del Cotizador FI" />
 
             <div>
-                <flux:input wire:model="numericValueTariff" type="number" icon="currency-dollar" placeholder="Tarifa" label="Tarifa Mínima"/>
+                <flux:input 
+                @keydown.enter="blockInteractions($event); isLoadingTariffModal = true; $wire.addRowTariff();"
+                wire:model="numericValueTariff" type="number" icon="currency-dollar" placeholder="Tarifa" label="Tarifa Mínima"/>
             </div>
             <div class="flex gap-2">
                 <flux:spacer />
@@ -103,7 +106,9 @@
                 <span class="text-5xl font-extrabold text-green-800 drop-shadow-sm" x-text="`${displayPercentage.toFixed(0)}%`"></span>
             </div>
             <div>
-                <flux:input wire:model="numericValueTariff" type="number" icon="percent-badge" placeholder="Porcentaje (ej: 5.51)" label="Porcentaje"/>
+                <flux:input 
+                @keydown.enter="blockInteractions($event); isLoadingPercentageModal = true; $wire.addRowPercentage();"
+                wire:model="numericValueTariff" type="number" icon="percent-badge" placeholder="Porcentaje (ej: 5.51)" label="Porcentaje"/>
             </div>
 
             <div class="flex gap-2">
@@ -157,15 +162,21 @@
         </div>
     </flux:modal>
 
-    <flux:modal 
+    <flux:modal
+    x-data="{ isLoadingTariffFlyoutModal: false }"
     name="operand-modal" variant="flyout" 
+    x-on:escape-enabled.window="
+        isLoadingTariffFlyoutModal = false;
+    "
     x-on:close="
+        isLoadingTariffFlyoutModal = false;
         escapeEnabled = true;
         $wire.selectedOperator = '';
         $wire.numericValueTariff = null;
         $wire.rowIndexTariff = null;
         $wire.columnNameTariff = null;
-        $wire.resetValidationWrapper();">
+        $wire.resetValidationWrapper();"
+    >
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Tarifa</flux:heading>
@@ -206,7 +217,9 @@
 
 
                 <div>
-                    <flux:input wire:model="numericValueTariff" 
+                    <flux:input
+                    @keydown.enter="blockInteractions($event); isLoadingTariffFlyoutModal = true; $wire.addRow();"
+                    wire:model="numericValueTariff" 
                     type="number"
                     label="Valor numérico" placeholder="Ingrese un valor" />
                     <br/>
@@ -217,11 +230,18 @@
 
             <div class="flex mb-2">
                 <flux:button 
+                    x-on:click="isLoadingTariffFlyoutModal = true;"
                     {{-- wire:click="addRow()" --}}
                     @click="blockInteractions($event); $wire.addRow();"
                     variant="primary"
                 >
-                    Crear tarifa
+                    <template x-if="isLoadingTariffFlyoutModal">
+                        <flux:icon.loading />
+                    </template>
+
+                    <template x-if="!isLoadingTariffFlyoutModal">
+                        <span>Crear tarifa</span>
+                    </template>
                 </flux:button>
             </div>
         </div>
@@ -254,24 +274,19 @@
                     <flux:field>
                         <flux:label badge="Requerido">País</flux:label>
                         <flux:input.group>
-                            {{-- <flux:input
-                                wire:model="newColumnName"
-                                placeholder="Ingrese..."
-                            /> --}}
+                            <flux:select variant="listbox" searchable wire:model="newColumnName" placeholder="Elige un país">
+                                @foreach($countries as $country)
+                                    <flux:select.option value="{{ $country['name'] }}">
 
-                         <flux:select variant="listbox" searchable wire:model="newColumnName" placeholder="Elige un país">
-                            @foreach($countries as $country)
-                                <flux:select.option value="{{ $country['name'] }}">
+                                        {{-- Agrupamos la bandera y el texto en un div para controlar su alineación --}}
+                                    <span class="flex items-center justify-start">
+                                            <span class="mr-2">{!! $this->getFlagEmoji($country['iso2']) !!}</span>
+                                            <span>{{ $country['name'] }}</span>
+                                        </span>
 
-                                    {{-- Agrupamos la bandera y el texto en un div para controlar su alineación --}}
-                                   <span class="flex items-center justify-start">
-                                        <span class="mr-2">{!! $this->getFlagEmoji($country['iso2']) !!}</span>
-                                        <span>{{ $country['name'] }}</span>
-                                    </span>
-
-                                </flux:select.option>
-                            @endforeach
-                        </flux:select>
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
                             <flux:button type="submit" wire:target="addColumn" icon="plus">
                                 Agregar
                             </flux:button>
@@ -287,13 +302,11 @@
             </flux:popover>
         </flux:dropdown>
 
-        <flux:dropdown position="bottom" align="end" x-show="$wire.table_columns.length > 1">
-            <flux:modal.trigger name="operand-modal">
-                <flux:button icon="plus" color="success">
-                    Añadir Tarifa
-                </flux:button>
-            </flux:modal.trigger>
-        </flux:dropdown>
+        <flux:modal.trigger name="operand-modal" x-show="$wire.table_columns.length > 1">
+            <flux:button icon="plus" color="success">
+                Añadir Tarifa
+            </flux:button>
+        </flux:modal.trigger>
 
         {{-- Tipo de Servicio --}}
         <flux:radio.group 
@@ -301,6 +314,7 @@
             label="Seleccione un Maestro" 
             variant="pills"
             class="flex-wrap"
+            @click="loadingSpinner($event);"
         >
             <flux:radio wire:click="SelectMasterTypeService('Pick Up Aéreo')" value="pu_aereo" label="Pick Up Aéreo" />
             <flux:radio wire:click="SelectMasterTypeService('Pick Up Marítimo')" value="pu_maritimo" label="Pick Up Marítimo" />
@@ -313,7 +327,7 @@
 
         {{-- Mostrar/Ocultar Moneda --}}
         @if($enableCurrencyFeature)
-            <flux:button @click="$wire.toggleCurrencyRow()">
+            <flux:button x-show="$wire.table_columns.length > 1" @click="loadingSpinner($event);$wire.toggleCurrencyRow()">
                 <span x-show="!$wire.showCurrencyRow">Mostrar Moneda</span>
                 <span x-show="$wire.showCurrencyRow">Ocultar Moneda</span>
             </flux:button>
@@ -330,22 +344,17 @@
         <flux:table>
             <flux:table.columns>
                 @foreach($table_columns as $colIndex => $column)
-                    <flux:table.column align="center">
+                    <flux:table.column align="center" wire:key="row-{{ $column['id'] }}">
                         <div class="flex items-center justify-center gap-2">
                             @if ($colIndex === 0)
                                 <span class="font-semibold">{{ $column['label'] }}</span>
                             @else
-                                {{-- <input
-                                    wire:model.defer="table_columns.{{ $colIndex }}.label"
-                                    type="text"
-                                    placeholder="Nombre País"
-                                    class="flex-grow text-center font-semibold border-gray-300 text-gray-900 bg-gray-100 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"> --}}
-
                                 <flux:select 
                                 variant="listbox" searchable wire:model.change="table_columns.{{ $colIndex }}.label" placeholder="Elige un país">
                                     @foreach($countries as $country)
                                         @if($country['name'] == $table_columns[$colIndex]['label'])
                                             <flux:select.option
+                                                wire:key="country-{{ $country['id'] }}"
                                                 selected
                                                 value="{{ $country['name'] }}"
                                                 >
@@ -356,18 +365,19 @@
 
                                             </flux:select.option>
                                         @else
-                                            <flux:modal.trigger name="dichotomic-modal">
+                                            <div>
                                                 <flux:select.option
+                                                    wire:key="country-{{ $country['id'] }}"
                                                     x-on:click.prevent="prepareDichotomic({
                                                         method: 'editCountry',
                                                         param: '{{ json_encode([
-                                                                   'country_name' => $country['name'],
-                                                                   'colIndex' => $colIndex
+                                                                    'country_name' => $country['name'],
+                                                                    'colIndex' => $colIndex
                                                                 ]) }}',
                                                         heading: 'Cambiar País',
                                                         message: `¿Estás seguro de que quieres cambiar al país {!! $this->getFlagEmoji($country['iso2']) . ' ' . $country['name'] !!}?`,
                                                         modalDichotomicBtnText: 'Cambiar'
-                                                    })"
+                                                    });"
                                                     value="{{ $country['name'] }}"
                                                     >
                                                     <span class="flex items-center justify-start">
@@ -376,25 +386,21 @@
                                                     </span>
 
                                                 </flux:select.option>
-                                            </flux:modal.trigger>
-
+                                            </div>
                                         @endif
                                     @endforeach
                                 </flux:select>
-
-                                <flux:modal.trigger name="dichotomic-modal">
-                                    <flux:tooltip content="Borrar columna" position="top">
-                                        <flux:button size="xs" 
-                                            @click="prepareDichotomic({
-                                                method: 'removeColumn',
-                                                param: {{ $column['id'] }},
-                                                heading: 'Borrar Columna',
-                                                message: `¿Estás seguro de que quieres eliminar el país '{{ $column['label'] }}' y todas sus tarifas?`,
-                                                modalDichotomicBtnText: 'Borrar'
-                                            })"
-                                            class="bg-red-500!  flex-shrink-0" icon="x-mark" icon:variant="outline" />
-                                    </flux:tooltip>
-                                </flux:modal.trigger>
+                                <flux:tooltip content="Borrar columna" position="top">
+                                    <flux:button size="xs" 
+                                        @click="prepareDichotomic({
+                                            method: 'removeColumn',
+                                            param: {{ $column['id'] }},
+                                            heading: 'Borrar Columna',
+                                            message: `¿Estás seguro de que quieres eliminar el país '{{ $column['label'] }}' y todas sus tarifas?`,
+                                            modalDichotomicBtnText: 'Borrar'
+                                        })"
+                                        class="bg-red-500!  flex-shrink-0" icon="x-mark" icon:variant="outline" />
+                                </flux:tooltip>
                             @endif
                         </div>
                     </flux:table.column>
@@ -404,73 +410,69 @@
 
             <flux:table.rows>
                 @foreach($rows_data as $rowIndex => $row)
-                    <flux:table.row align="center">
+                    <flux:table.row 
+                        wire:key="row-data-{{ $row['tier_id'] ?? $rowIndex }}" 
+                        align="center"
+                        >
                         @foreach($table_columns as $colIndex => $column)
-                            <flux:table.cell>
+                            <flux:table.cell 
+                                wire:key="col-data-{{ $column['id'] === 'tier_label' ? $colIndex : $column['id'] }}"
+                            >
                                 @if($rows_data[$rowIndex][$column['name']] == $row['tier_label'] && $row['tier_label'] === 'Mínima')
                                     <flux:badge icon="minus-circle" color="sky">Tarifa {{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
                                 @elseif($rowIndex == 0)
-                                     <flux:modal.trigger name="minimum-tariff-modal">
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar la Tarifa Mínima" placement="top">
-                                            <flux:badge class="cursor-pointer" variant="solid" icon="currency-dollar" size="lg" color="zinc"
-                                            {{-- @click="parseAndSetTariff('{{ $rows_data[$rowIndex][$column['name']] }}',
-                                                                            {{ $rowIndex }},
-                                                                            '{{ $column['name'] }}');" --}}
-                                            @click="$wire.set('numericValueTariff',{{$rows_data[$rowIndex][$column['name']]}});
-                                                    $wire.set('rowIndexTariff',{{ $rowIndex }});
-                                                    $wire.set('columnNameTariff','{{ $column['name'] }}');"
-                                            >{{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
-                                        </flux:tooltip>
-                                    </flux:modal.trigger>
+                                    <flux:tooltip flux:tooltip content="Oprime para configurar la Tarifa Mínima" placement="top">
+                                        <flux:badge class="cursor-pointer" variant="solid" icon="currency-dollar" size="lg" color="zinc"
+                                        @click="$wire.numericValueTariff = {{$rows_data[$rowIndex][$column['name']]}};
+                                                $wire.rowIndexTariff = {{ $rowIndex }};
+                                                $wire.columnNameTariff = '{{ $column['name'] }}';
+                                                $flux.modal('minimum-tariff-modal').show();
+                                                "
+                                        >{{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
+                                    </flux:tooltip>
                                 
                                 @elseif($rows_data[$rowIndex][$column['name']] == $row['tier_label'])
-                                    <flux:modal.trigger name="operand-modal">
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" placement="top">
-                                            <flux:badge class="cursor-pointer" variant="pill" icon="currency-dollar"
-                                                @click="parseAndSetTariff('{{ $rows_data[$rowIndex][$column['name']] }}',
-                                                                            {{ $rowIndex }},
-                                                                            '{{ $column['name'] }}');"
-                                            >
-                                            {{ str_replace(['<=', '>='], ['≤', '≥'], $rows_data[$rowIndex][$column['name']]) }}
-                                            </flux:badge>
-                                        </flux:tooltip>
-                                    </flux:modal.trigger>
+                                    <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" placement="top">
+                                        <flux:badge class="cursor-pointer" variant="pill" icon="currency-dollar"
+                                            @click="parseAndSetTariff('{{ $rows_data[$rowIndex][$column['name']] }}',
+                                                                        {{ $rowIndex }},
+                                                                        '{{ $column['name'] }}');"
+                                        >
+                                        {{ str_replace(['<=', '>='], ['≤', '≥'], $rows_data[$rowIndex][$column['name']]) }}
+                                        </flux:badge>
+                                    </flux:tooltip>
                                 @else
-                                    <flux:modal.trigger name="percentage-modal">
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Porcentaje" position="bottom">
-                                            <flux:button icon="percent-badge"
-                                                class="w-32"
-                                                x-bind:disabled="isDisabledOpenPercentageModal"
-                                                placeholder="{{ $column['label'] }}"
-                                                @click="
-                                                        $wire.set('numericValueTariff',{{$rows_data[$rowIndex][$column['name']]}});
-                                                        $wire.set('rowIndexTariff',{{ $rowIndex }});
-                                                        $wire.set('columnNameTariff','{{ $column['name'] }}');
-                                                        "
-                                                >
-                                                {{ $rows_data[$rowIndex][$column['name']] }}
-                                            </flux:button>
-                                        </flux:tooltip>
-                                    </flux:modal.trigger>
-
+                                    <flux:tooltip flux:tooltip content="Oprime para configurar Porcentaje" position="bottom">
+                                        <flux:button icon="percent-badge"
+                                            class="w-32"
+                                            x-bind:disabled="isDisabledOpenPercentageModal"
+                                            placeholder="{{ $column['label'] }}"
+                                            @click="
+                                                    $wire.numericValueTariff = {{$rows_data[$rowIndex][$column['name']]}};
+                                                    $wire.rowIndexTariff = {{ $rowIndex }};
+                                                    $wire.columnNameTariff = '{{ $column['name'] }}';
+                                                    $flux.modal('percentage-modal').show();
+                                                    "
+                                            >
+                                            {{ $rows_data[$rowIndex][$column['name']] }}
+                                        </flux:button>
+                                    </flux:tooltip>
                                 @endif
                             </flux:table.cell>
                         @endforeach
                         <flux:table.cell>
                             @if($row['tier_id'] !== null)
-                                <flux:modal.trigger name="dichotomic-modal">
-                                    <flux:tooltip content="Borrar fila" position="top">
-                                        <flux:button size="xs"
-                                            @click="prepareDichotomic({
-                                                method: 'removeRow',
-                                                param: {{ $row['tier_id'] }},
-                                                heading: 'Borrar Fila',
-                                                message: `¿Estás seguro de que quieres eliminar la tarifa '{{ $row['tier_label'] }}'?`,
-                                                modalDichotomicBtnText: 'Borrar'
-                                            })"
-                                            class="bg-red-500!" icon="x-mark" icon:variant="outline" />
-                                    </flux:tooltip>
-                                </flux:modal.trigger>
+                                <flux:tooltip content="Borrar fila" position="top">
+                                    <flux:button size="xs"
+                                        @click="prepareDichotomic({
+                                            method: 'removeRow',
+                                            param: {{ $row['tier_id'] }},
+                                            heading: 'Borrar Fila',
+                                            message: `¿Estás seguro de que quieres eliminar la tarifa '{{ $row['tier_label'] }}'?`,
+                                            modalDichotomicBtnText: 'Borrar'
+                                        })"
+                                        class="bg-red-500!" icon="x-mark" icon:variant="outline" />
+                                </flux:tooltip>
                             @else
                                 <flux:badge icon="minus-circle" color="red">Eliminar</flux:badge>
                             @endif
@@ -488,11 +490,19 @@
                         <td class="p-4 font-semibold text-center text-gray-700 dark:text-gray-200">Moneda</td>
                         @foreach($table_columns as $colIndex => $column)
                             @if($colIndex > 0)
-                                <td class="p-2">
-                                    <flux:select x-on:change="blockInteractions($event); $wire.save();" wire:model.live="service_currencies.{{ $column['id'] }}">
+                                <td
+                                    wire:key="col-data2-{{ $column['id'] === 'tier_label' ? $colIndex : $column['id'] }}"
+                                    class="p-2">
+                                    <flux:select x-on:change="loadingSpinner($event); $wire.save();" 
+                                        {{-- wire:model.live="service_currencies.{{ $column['id'] }}" --}}
+                                        >
                                         <flux:select.option value="">Sin Moneda</flux:select.option>
                                         @foreach($currencies as $currency)
-                                            <flux:select.option value="{{ $currency->id }}">{{ $currency->code }}</flux:select.option>
+                                            <flux:select.option
+                                                wire:key="currency-{{ $currency['id'] }}"
+                                                value="{{ $currency->id }}">
+                                                {{ $currency->code }}
+                                            </flux:select.option>
                                         @endforeach
                                     </flux:select>
                                 </td>

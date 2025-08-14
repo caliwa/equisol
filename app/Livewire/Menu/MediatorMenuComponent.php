@@ -15,7 +15,7 @@ class MediatorMenuComponent extends Component
 {
     use AdapterLivewireExceptionTrait,
         ModalEnableTrait,
-        EscapeEnableTrait,
+        // EscapeEnableTrait,
         ProcessingEscapeTrait;
 
     #[On('confirm-validation-modal')]
@@ -28,6 +28,9 @@ class MediatorMenuComponent extends Component
         $this->dispatch('mount-dichotomic-asking-modal', $value);
     }
 
+    public function placeholder(){
+        return view('livewire.placeholder.index-menu-placeholder');
+    }
 
     public function render()
     {
