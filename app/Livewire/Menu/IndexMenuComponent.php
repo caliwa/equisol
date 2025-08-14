@@ -11,6 +11,7 @@ use Nnjeim\World\World;
 use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -49,12 +50,22 @@ class IndexMenuComponent extends Component
     public bool $showCurrencyRow = true;
     public Collection $currencies;
 
-    #[Validate('required', message: 'Debe ingresar un nombre para el país.')]
-    #[Validate('min:3', message: 'El nombre del país debe tener al menos 3 caracteres.')]
-    #[Validate('unique:origins,name', message: 'El país ya existe.')]
+    #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un nombre para el país.')]
+    // #[Validate('min:3', message: 'El nombre del país debe tener al menos 3 caracteres.')]
+    // #[Validate('unique:origins,name', message: 'El país ya existe.')]
     public string $newColumnName = '';
 
     public $countries = [];
+
+    // public $showPercentageModal = false;
+
+    // public function updatedShowPercentageModal($value){
+    //     if ($value) {
+    //         $this->dispatch('x-block-open-percentage-modal');
+    //     } else {
+    //         $this->dispatch('x-unblock-open-percentage-modal');
+    //     }
+    // }
 
     public function mount()
     {
@@ -69,6 +80,12 @@ class IndexMenuComponent extends Component
         if ($this->enableCurrencyFeature) {
             $this->currencies = Currency::all();
         }
+        $this->loadRateTableData();
+    }
+
+    function SelectMasterTypeService($serviceTypeName)
+    {
+        $this->serviceTypeName = $serviceTypeName;
         $this->loadRateTableData();
     }
 
@@ -188,24 +205,77 @@ class IndexMenuComponent extends Component
         $this->dispatch('EscapeEnabled');
     }
 
-    public function editCountry($dict){
+    public function editCountry($dict)
+    {
         $dict = (array)json_decode($dict);
-
         $country_name = $dict['country_name'] ?? null;
         $colIndex = $dict['colIndex'] ?? null;
 
-        $this->table_columns[$colIndex]['label'] = $country_name;
-
-        foreach ($this->table_columns as $column) {
-            if (isset($column['origin_id'])) {
-                Origin::where('id', $column['origin_id'])->update(['name' => $column['label']]);
-            }
+        if (empty($country_name) || !isset($this->table_columns[$colIndex])) {
+            Flux::toast(variant: 'error', text: 'Datos inválidos');
+            return false;
         }
 
-        Flux::toast('Datos guardados correctamente.');
-        $this->loadRateTableData();
-        $this->dispatch('EscapeEnabled');
-        Flux::modal('dichotomic-modal')->close();
+        $origin_id = $this->table_columns[$colIndex]['origin_id'] ?? null;
+        $success = false;
+
+        try {
+            $success = DB::transaction(function () use ($country_name, $colIndex, $origin_id) {
+                $existingOrigin = Origin::where('name', $country_name)
+                                    ->where('id', '!=', $origin_id)
+                                    ->first();
+
+                if ($existingOrigin) {
+                    $conflictingServices = Service::where('origin_id', $origin_id)
+                        ->whereHas('serviceType', function($query) use ($existingOrigin) {
+                            $query->whereExists(function($subQuery) use ($existingOrigin) {
+                                $subQuery->select('id')
+                                    ->from('services')
+                                    ->whereColumn('service_type_id', 'service_types.id')
+                                    ->where('origin_id', $existingOrigin->id);
+                            });
+                        })
+                        ->count();
+
+                    if ($conflictingServices > 0) {
+                        Flux::toast(
+                            variant: 'warning', 
+                            text: 'El cambio crearía '.$conflictingServices.' combinación(es) duplicada(s)',
+                            heading: 'Error de duplicado'
+                        );
+
+                        return false;
+                    }
+                }
+
+                $this->table_columns[$colIndex]['label'] = $country_name;
+
+                foreach ($this->table_columns as $column) {
+                    if (isset($column['origin_id'])) {
+                        Origin::where('id', $column['origin_id'])
+                            ->update(['name' => $column['label']]);
+                    }
+                }
+
+                return true;
+            });
+        } catch (\Exception $e) {
+            Flux::toast(
+                variant: 'error', 
+                text: 'Error al procesar los cambios: '.$e->getMessage(),
+                heading: 'Error'
+            );
+            return false;
+        }finally{
+            if ($success) {
+                Flux::toast('Datos guardados correctamente.');
+                $this->loadRateTableData();
+                $this->dispatch('EscapeEnabled');
+            }
+            Flux::modal('dichotomic-modal')->close();
+        }
+
+        return $success;
     }
 
     public function addRowPercentage(){
@@ -307,6 +377,7 @@ class IndexMenuComponent extends Component
         $this->loadRateTableData();
     }
 
+
     public function addColumn()
     {
         $variables_to_validate = [
@@ -314,19 +385,38 @@ class IndexMenuComponent extends Component
         ];
 
         $this->validateLivewireInput($variables_to_validate);
-
-        DB::transaction(function () {
-            $name = $this->newColumnName;
+        
+        $operationSuccess = DB::transaction(function () {
             $serviceType = ServiceType::firstOrCreate(['name' => $this->serviceTypeName]);
-            $origin = Origin::create(['name' => $name]);
+            $origin = Origin::firstOrCreate(['name' => $this->newColumnName]);
+            
+            if (Service::where('origin_id', $origin->id)
+                    ->where('service_type_id', $serviceType->id)
+                    ->exists()) {
+                Flux::toast(
+                    variant: 'warning', 
+                    text: 'Ya existe un servicio con esta combinación de país (' . $this->newColumnName . ') y tipo (' . $this->serviceTypeName . ').', 
+                    heading: 'Error'
+                );
+                return false;
+            }
+            
             Service::create([
                 'origin_id' => $origin->id,
                 'service_type_id' => $serviceType->id,
                 'minimum_charge' => 0,
+                'currency_id' => null
             ]);
+            
+            return true;
         });
-        $this->reset(['newColumnName']);
-        Flux::toast('Campo agregado correctamente.', 'Éxito');
+
+        if (!$operationSuccess) {
+            return;
+        }
+
+        $this->reset(['newColumnName', 'serviceTypeName']);
+        Flux::toast('Combinación agregada correctamente.', 'Éxito');
         $this->loadRateTableData();
     }
 

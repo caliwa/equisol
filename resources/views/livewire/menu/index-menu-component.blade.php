@@ -14,9 +14,16 @@
             } else {
                 console.warn('El formato de la tarifa no es válido:', inputValue);
             }
-        }
-
-    }">
+        },
+        isDisabledOpenPercentageModal: false,
+    }"
+    x-on:x-block-open-percentage-modal.window="
+        isDisabledOpenPercentageModal = true;
+    "
+    x-on:x-unblock-loading-percentage-modal.window="
+        isDisabledOpenPercentageModal = false;
+    "
+    >
     
     <flux:breadcrumbs>
         <flux:breadcrumbs.item href="#" icon="home" />
@@ -65,6 +72,7 @@
     </flux:modal>
 
     <flux:modal
+        {{-- wire:model.self="showPercentageModal" --}}
         x-data="{ isLoadingPercentageModal: false, displayPercentage: 0 }"
         x-init="$watch(() => $wire.numericValueTariff, value => {
                 const num = parseFloat(value);
@@ -228,7 +236,7 @@
 
     <flux:heading class="mt-2" size="xl">Gestión Base de datos - Maestro</flux:heading>
 
-    <div wire:dirty>Tienes cambios sin guardar...</div> 
+    <div wire:dirty>Esperando sincronización...</div> 
     <div wire:dirty.remove>Los cambios están sincronizados.</div>
     
     <div class="flex flex-wrap items-end gap-4 mb-6 mt-4">
@@ -279,7 +287,7 @@
             </flux:popover>
         </flux:dropdown>
 
-        <flux:dropdown position="bottom" align="end">
+        <flux:dropdown position="bottom" align="end" x-show="$wire.table_columns.length > 1">
             <flux:modal.trigger name="operand-modal">
                 <flux:button icon="plus" color="success">
                     Añadir Tarifa
@@ -294,10 +302,10 @@
             variant="pills"
             class="flex-wrap"
         >
-            <flux:radio value="pu_aereo" label="Pick Up Aéreo" />
-            <flux:radio value="pu_maritimo" label="Pick Up Marítimo" />
-            <flux:radio value="flete_aereo" label="Flete Aéreo" />
-            <flux:radio value="flete_maritimo" label="Flete Marítimo" />
+            <flux:radio wire:click="SelectMasterTypeService('Pick Up Aéreo')" value="pu_aereo" label="Pick Up Aéreo" />
+            <flux:radio wire:click="SelectMasterTypeService('Pick Up Marítimo')" value="pu_maritimo" label="Pick Up Marítimo" />
+            <flux:radio wire:click="SelectMasterTypeService('Flete Aéreo')" value="flete_aereo" label="Flete Aéreo" />
+            <flux:radio wire:click="SelectMasterTypeService('Flete Marítimo')" value="flete_maritimo" label="Flete Marítimo" />
         </flux:radio.group>
 
         {{-- Spacer para empujar botones a la derecha --}}
@@ -430,15 +438,18 @@
                                 @else
                                     <flux:modal.trigger name="percentage-modal">
                                         <flux:tooltip flux:tooltip content="Oprime para configurar Porcentaje" position="bottom">
-                                            <flux:input icon="percent-badge"
-                                                wire:model.defer="rows_data.{{ $rowIndex }}.{{ $column['name'] }}"
-                                                readonly
-                                                type="text"
+                                            <flux:button icon="percent-badge"
+                                                class="w-32"
+                                                x-bind:disabled="isDisabledOpenPercentageModal"
                                                 placeholder="{{ $column['label'] }}"
-                                                @click="$wire.set('numericValueTariff',{{$rows_data[$rowIndex][$column['name']]}});
+                                                @click="
+                                                        $wire.set('numericValueTariff',{{$rows_data[$rowIndex][$column['name']]}});
                                                         $wire.set('rowIndexTariff',{{ $rowIndex }});
-                                                        $wire.set('columnNameTariff','{{ $column['name'] }}');"
-                                                />
+                                                        $wire.set('columnNameTariff','{{ $column['name'] }}');
+                                                        "
+                                                >
+                                                {{ $rows_data[$rowIndex][$column['name']] }}
+                                            </flux:button>
                                         </flux:tooltip>
                                     </flux:modal.trigger>
 

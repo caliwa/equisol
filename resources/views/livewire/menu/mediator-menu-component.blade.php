@@ -8,7 +8,7 @@
         lastEscapeTime: 0,
         activeIcon: Math.floor(Math.random() * 3),
         blockInteractions(event) {
-            event.preventDefault();
+        {{-- e.preventDefault(); --}}
             event.target.blur();
             this.escapeEnabled = false;
             this.addTabTrapListener();
@@ -24,13 +24,13 @@
 
             if ((key === 'Tab' || key === 'Escape') && !this.escapeEnabled) {
                 e.stopPropagation();
-                e.preventDefault();
+                {{-- e.preventDefault(); --}}
             }
         },
         blockClick(event) {
             if (!this.escapeEnabled) {
                 event.stopPropagation();
-                event.preventDefault();
+                {{-- event.preventDefault(); --}}
             }
         },
         closeTopModal() {
@@ -55,7 +55,7 @@
             }, 150);
         },
         handleEnter(event) {
-            event.preventDefault();
+            {{-- event.preventDefault(); --}}
             event.target.blur();
             this.blockInteractions(event);
             this.startCheckingEscapeEnabled(event.target);

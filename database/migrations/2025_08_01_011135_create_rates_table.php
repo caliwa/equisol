@@ -27,7 +27,7 @@ return new class extends Migration
 
             // Asegura que no haya servicios duplicados (misma combinación de origen, tipo y moneda).
             // La restricción única funciona con valores nulos.
-            $table->unique(['origin_id', 'service_type_id', 'currency_id'], 'service_unique');
+            $table->unique(['origin_id', 'service_type_id'], 'service_unique');
         });
     }
 
