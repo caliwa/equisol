@@ -16,7 +16,7 @@
 </head>
 <body class="overflow-hidden">
     <div class="flex h-screen">
-        <livewire:layouts.sidebar-component />
+        {{-- <livewire:layouts.sidebar-component /> --}}
         <div class="relative w-full flex flex-col dark:bg-gray-900">
             <livewire:layouts.navbar-component />
             

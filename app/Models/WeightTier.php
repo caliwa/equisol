@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class WeightTier extends Model
 {
     use HasFactory;
-    protected $fillable = ['service_type_id', 'label', 'min_weight', 'max_weight', 'display_order'];
+    protected $fillable = ['service_type_id', 'label', 'min_weight', 'display_order'];
 
     /**
      * Un nivel de peso tiene muchas tarifas asociadas (una por cada servicio).

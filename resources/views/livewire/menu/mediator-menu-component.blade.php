@@ -124,7 +124,12 @@
 
     {{-- <div id="bg-validation-input" style="z-index: 2147483647;"  x-show="!escapeEnabled" class="absolute inset-0 flex items-center justify-center bg-white/50  "></div> --}}
 
-    <div id="bg-validation-input" x-show="loadingSpinnerEnabled" class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black/30 bg-white/30 select-none" style="z-index: 2147483647;">
+    <div id="bg-validation-input"
+        x-show="loadingSpinnerEnabled"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-90"
+        class="fixed inset-0 fade-in-scale flex items-center justify-center dark:bg-black/30 bg-white/30 select-none" style="z-index: 2147483647;">
         <div class="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
             <div class="flex items-center">
                 <flux:icon.loading />

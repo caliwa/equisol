@@ -36,7 +36,7 @@ class IndexMenuComponent extends Component
     public string $selectedOperator = '';
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
     #[Validate('numeric', message: 'VALIDACIÓN: El valor debe ser un número.')]
-    #[Validate('min:0.01', message: 'VALIDACIÓN: El valor debe ser mayor a 0.')]
+    #[Validate('min:0.00', message: 'VALIDACIÓN: El valor debe ser mayor o igual a 0.')]
     #[Validate('max:999999.99', message: 'VALIDACIÓN: El valor no puede ser mayor a 999999.99.')]
     public float $numericValueTariff;
     public $rowIndexTariff;
@@ -82,16 +82,20 @@ class IndexMenuComponent extends Component
         if ($this->enableCurrencyFeature) {
             $this->currencies = Currency::all();
         }
-        $this->SelectMasterTypeService($this->serviceTypeName);
+        $this->SelectMasterTypeService($this->serviceTypeName, true);
         $this->loadRateTableData();
+
     }
 
-    function SelectMasterTypeService($serviceTypeName)
+    function SelectMasterTypeService($serviceTypeName, $firstTime = null)
     {
         $this->serviceTypeName = $serviceTypeName;
         $serviceType = ServiceType::firstOrCreate(['name' => $serviceTypeName]);
         $this->serviceTypeId = $serviceType->id;
         $this->loadRateTableData();
+        if(is_null($firstTime)){
+            Flux::toast('Maestro cambiado éxitosamente.');
+        }
         $this->dispatch('escape-enabled');
     }
 
@@ -358,6 +362,12 @@ class IndexMenuComponent extends Component
 
         $label = $this->selectedOperator . $formattedValue;
 
+        if ((is_numeric($formattedValue) && $formattedValue <= 0) && ($this->selectedOperator == '<' || $this->selectedOperator == '<=')) {
+            $this->dispatch('escape-enabled');
+            $this->addError('numericValueTariff', 'No se pueden validar rangos menores o iguales a cero.');
+            return;
+        }
+
         try {
             Validator::make(
                 ['label' => $label, 'service_type_id' => $this->serviceTypeId],
@@ -388,7 +398,7 @@ class IndexMenuComponent extends Component
         WeightTier::create([
             'label' => $label,
             'min_weight' => ($lastTier->max_weight ?? -1) + 1,
-            'max_weight' => ($lastTier->max_weight ?? 0) + 1000,
+            // 'max_weight' => ($lastTier->max_weight ?? 0) + 1000,
             'display_order' => ($lastTier->display_order ?? 0) + 1,
             'service_type_id' => $this->serviceTypeId, // <--- AGREGAR ESTO
         ]);
