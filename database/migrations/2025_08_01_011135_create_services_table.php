@@ -13,11 +13,14 @@ public function up(): void
     {
         Schema::create('weight_tiers', function (Blueprint $table) {
             $table->id();
-            $table->string('label')->unique(); // E.g., '<45', '100', '250', '≥1000'
+            $table->foreignId('service_type_id')->after('id')->constrained()->onDelete('cascade');
+            $table->string('label'); // E.g., '<45', '100', '250', '≥1000'
             $table->integer('min_weight')->default(0);
             $table->integer('max_weight');
             $table->integer('display_order')->default(0); // Para ordenar las filas correctamente
             $table->timestamps();
+
+            $table->unique(['service_type_id', 'label'], 'unique_label_per_service_type');
         });
     }
 

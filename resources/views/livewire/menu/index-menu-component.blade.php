@@ -314,7 +314,7 @@
             label="Seleccione un Maestro" 
             variant="pills"
             class="flex-wrap"
-            @click="loadingSpinner($event);"
+            {{-- @click="loadingSpinner($event);" --}}
         >
             <flux:radio wire:click="SelectMasterTypeService('Pick Up Aéreo')" value="pu_aereo" label="Pick Up Aéreo" />
             <flux:radio wire:click="SelectMasterTypeService('Pick Up Marítimo')" value="pu_maritimo" label="Pick Up Marítimo" />
@@ -333,14 +333,15 @@
             </flux:button>
         @endif
 
-        {{-- Guardar Cambios --}}
-        {{-- <flux:button wire:click="save" color="primary">
-            Guardar Cambios
-        </flux:button> --}}
+        @if($serviceTypeName == 'Flete Aéreo' )
+            <flux:description>Relación 1000 Kg -> 1 Ton 6 m³</flux:description>
+        @endif
 
     </div>
 
-    <div x-show="$wire.table_columns.length > 1" class="overflow-x-auto min-w-[400px]">
+    <div x-show="$wire.table_columns.length > 1" class="w-full overflow-x-auto">
+            <div class="min-w-max">
+
         <flux:table>
             <flux:table.columns>
                 @foreach($table_columns as $colIndex => $column)
@@ -478,10 +479,17 @@
                             @endif
                         </flux:table.cell>
                     </flux:table.row>
+                    <flux:table.row>
+                        @if(count($rows_data) == 1)
+                            <flux:table.cell colspan="{{ count($table_columns) + 1 }}" class="text-center">
+                                Ingresa una tarifa para configurar el porcentaje.
+                            </flux:table.cell>
+                        @endif
+                    </flux:table.row>
+
                 @endforeach
             </flux:table.rows>
 
-            {{-- Fila de Divisas (se muestra condicionalmente) --}}
             @if($enableCurrencyFeature)
                 <tfoot
                  x-show="$wire.showCurrencyRow" 
@@ -493,8 +501,8 @@
                                 <td
                                     wire:key="col-data2-{{ $column['id'] === 'tier_label' ? $colIndex : $column['id'] }}"
                                     class="p-2">
-                                    <flux:select x-on:change="loadingSpinner($event); $wire.save();" 
-                                        {{-- wire:model.live="service_currencies.{{ $column['id'] }}" --}}
+                                    <flux:select x-on:change="loadingSpinner($event); $wire.saveNewCurrencyMaster();" 
+                                        wire:model.live="service_currencies.{{ $column['id'] }}"
                                         >
                                         <flux:select.option value="">Sin Moneda</flux:select.option>
                                         @foreach($currencies as $currency)
@@ -508,11 +516,13 @@
                                 </td>
                             @endif
                         @endforeach
-                        <td class="p-2"></td> <!-- Celda vacía para alinear con la columna de acciones -->
+                        <td class="p-2"></td>
                     </tr>
                 </tfoot>
             @endif
         </flux:table>
+            </div>
+
     </div>
 
     <div x-show="$wire.table_columns.length <= 1" class="text-center py-8">

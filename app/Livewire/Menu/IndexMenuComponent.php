@@ -30,6 +30,8 @@ class IndexMenuComponent extends Component
     public string $type_service = 'pu_aereo';
     public string $serviceTypeName = 'Pick Up Aéreo';
 
+    public int $serviceTypeId;
+
     #[Validate('required', message: 'VALIDACIÓN: Debe seleccionar un operador.')]
     public string $selectedOperator = '';
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
@@ -80,12 +82,15 @@ class IndexMenuComponent extends Component
         if ($this->enableCurrencyFeature) {
             $this->currencies = Currency::all();
         }
+        $this->SelectMasterTypeService($this->serviceTypeName);
         $this->loadRateTableData();
     }
 
     function SelectMasterTypeService($serviceTypeName)
     {
         $this->serviceTypeName = $serviceTypeName;
+        $serviceType = ServiceType::firstOrCreate(['name' => $serviceTypeName]);
+        $this->serviceTypeId = $serviceType->id;
         $this->loadRateTableData();
         $this->dispatch('escape-enabled');
     }
@@ -112,9 +117,7 @@ class IndexMenuComponent extends Component
 
     public function loadRateTableData()
     {
-        $serviceType = ServiceType::firstOrCreate(['name' => $this->serviceTypeName]);
-
-        $query = Service::where('service_type_id', $serviceType->id)
+        $query = Service::where('service_type_id', $this->serviceTypeId)
             ->with(['origin', 'rates.weightTier'])
             ->whereHas('origin')
             ->join('origins', 'services.origin_id', '=', 'origins.id')
@@ -127,7 +130,9 @@ class IndexMenuComponent extends Component
         }
         
         $services = $query->get();
-        $weightTiers = WeightTier::orderBy('display_order')->get();
+        $weightTiers = WeightTier::where('service_type_id', $this->serviceTypeId)
+                         ->orderBy('display_order')
+                         ->get();
 
         $this->table_columns = [['id' => 'tier_label', 'name' => 'tier_label', 'label' => '']]; //Tarifa
         foreach ($services as $service) {
@@ -162,6 +167,19 @@ class IndexMenuComponent extends Component
         // dd([$this->rows_data, $this->table_columns]);
     }
 
+    public function saveNewCurrencyMaster(){
+        DB::transaction(function () {
+            if ($this->enableCurrencyFeature) {
+                foreach ($this->service_currencies as $serviceId => $currencyId) {
+                    Service::where('id', $serviceId)->update(['currency_id' => $currencyId ?: null]);
+                }
+            }
+        });
+        Flux::toast('Divisa cambiada éxitosamente.');
+        $this->loadRateTableData();
+        $this->dispatch('escape-enabled');
+    }
+
     public function save()
     {
         DB::transaction(function () {
@@ -169,13 +187,6 @@ class IndexMenuComponent extends Component
             foreach ($this->table_columns as $column) {
                 if (isset($column['origin_id'])) {
                     Origin::where('id', $column['origin_id'])->update(['name' => $column['label']]);
-                }
-            }
-
-            // Guardar monedas (si la función está activada)
-            if ($this->enableCurrencyFeature) {
-                foreach ($this->service_currencies as $serviceId => $currencyId) {
-                    Service::where('id', $serviceId)->update(['currency_id' => $currencyId ?: null]);
                 }
             }
 
@@ -349,9 +360,16 @@ class IndexMenuComponent extends Component
 
         try {
             Validator::make(
-                ['label' => $label],
-                ['label' => 'unique:weight_tiers,label'], 
-                ['label.unique' => 'La tarifa "' . $label . '" ya existe.']
+                ['label' => $label, 'service_type_id' => $this->serviceTypeId],
+                [
+                    'label' => [
+                        Rule::unique('weight_tiers')
+                            ->where(fn ($query) => $query->where('service_type_id', $this->serviceTypeId))
+                    ]
+                ],
+                [
+                    'label.unique' => 'La tarifa "' . $label . '" ya existe para este maestro.'
+                ]
             )->validate();
         } catch (\Exception $e) {
             $this->dispatch('escape-enabled');
@@ -372,6 +390,7 @@ class IndexMenuComponent extends Component
             'min_weight' => ($lastTier->max_weight ?? -1) + 1,
             'max_weight' => ($lastTier->max_weight ?? 0) + 1000,
             'display_order' => ($lastTier->display_order ?? 0) + 1,
+            'service_type_id' => $this->serviceTypeId, // <--- AGREGAR ESTO
         ]);
         Flux::modal('operand-modal')->close();
         Flux::toast('Tarifa agregada correctamente.', 'Éxito');
@@ -389,11 +408,10 @@ class IndexMenuComponent extends Component
         $this->validateLivewireInput($variables_to_validate);
         
         $operationSuccess = DB::transaction(function () {
-            $serviceType = ServiceType::firstOrCreate(['name' => $this->serviceTypeName]);
             $origin = Origin::firstOrCreate(['name' => $this->newColumnName]);
             
             if (Service::where('origin_id', $origin->id)
-                    ->where('service_type_id', $serviceType->id)
+                    ->where('service_type_id', $this->serviceTypeId)
                     ->exists()) {
                 Flux::toast(
                     variant: 'warning', 
@@ -405,7 +423,7 @@ class IndexMenuComponent extends Component
             
             Service::create([
                 'origin_id' => $origin->id,
-                'service_type_id' => $serviceType->id,
+                'service_type_id' => $this->serviceTypeId ,
                 'minimum_charge' => 0,
                 'currency_id' => null
             ]);
@@ -432,6 +450,13 @@ class IndexMenuComponent extends Component
                 if ($origin && !$origin->services()->exists()) {
                     $origin->delete();
                 }
+                if (!Service::where('service_type_id', $this->serviceTypeId)->exists()) {
+                    foreach ($this->rows_data as $row) {
+                        if (!is_null($row['tier_id'])) {
+                            WeightTier::destroy($row['tier_id']);
+                        }
+                    }
+                }
             }
         });
         Flux::toast('País eliminado correctamente.', 'Éxito');
@@ -441,7 +466,6 @@ class IndexMenuComponent extends Component
 
     public function removeRow($tierId)
     {
-        // sleep(50);
         WeightTier::destroy($tierId);
         Flux::toast('Tarifa eliminada correctamente.', 'Éxito');
         Flux::modal('dichotomic-modal')->close();

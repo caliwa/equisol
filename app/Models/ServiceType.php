@@ -18,4 +18,9 @@ class ServiceType extends Model
     {
         return $this->hasMany(Service::class);
     }
+
+    public function weightTiers()
+    {
+        return $this->hasMany(WeightTier::class);
+    }
 }
