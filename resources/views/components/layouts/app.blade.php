@@ -14,16 +14,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
 </head>
-<body class="overflow-hidden">
-    <div class="flex h-screen">
-        {{-- <livewire:layouts.sidebar-component /> --}}
-        <div class="relative w-full flex flex-col dark:bg-gray-900">
+<body>
+    <div class="flex">
+        <livewire:layouts.sidebar-component />
+        <div class="relative w-full flex flex-col overflow-y-auto overflow-x-auto">
             <livewire:layouts.navbar-component />
             
-            <main class="grow flex flex-col overflow-y-auto">
-                <div>
+            <main class="w-full">
                     {{ $slot }}
-                </div>
             </main>
         </div>
     </div>
