@@ -23,4 +23,9 @@ class ServiceType extends Model
     {
         return $this->hasMany(WeightTier::class);
     }
+
+    public function costItems(): HasMany
+    {
+        return $this->hasMany(CostItem::class);
+    }
 }
