@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class CostServiceType extends Model
+{
+    use HasFactory;
+    protected $fillable = ['name'];
+
+    /**
+     * Un tipo de servicio puede estar en muchos servicios.
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function weightTiers()
+    {
+        return $this->hasMany(WeightTier::class);
+    }
+
+    public function costItems(): HasMany
+    {
+        return $this->hasMany(CostItem::class);
+    }
+}

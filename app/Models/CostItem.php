@@ -20,23 +20,11 @@ class CostItem extends Model
         'stage',
         'concept',
         'fixed_amount',
-        'variable_rate',
-        'minimum_charge',
         'currency_id',
-        'calculation_type',
         'formula_notes',
+        'formula',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'fixed_amount' => 'decimal:2',
-        'variable_rate' => 'decimal:4',
-        'minimum_charge' => 'decimal:2',
-    ];
 
     /**
      * Get the service type that this cost item belongs to.
