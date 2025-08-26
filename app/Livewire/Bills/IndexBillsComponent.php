@@ -38,10 +38,31 @@ class IndexBillsComponent extends Component
 
 
     #[On('set-cost-item-from-calculation')]
-    public function SetCostItemFromCalculationVariables($dict){
-        // dd($this->costItems[$dict['idx_item']]['formula']);
-        // dd($this->costItems[$dict['idx_item']]['formula']);
-        $this->costItems[$dict['idx_item']]['formula'] = $dict['expression'];
+    public function SetCostItemFromCalculationVariables($dict)
+    {
+        // 1. Obtenemos el índice del array y la nueva configuración de la fórmula.
+        $itemIndex = $dict['idx_item'];
+        $newFormulaLogic = $dict['logic']; // La clave es 'formula' según tu método save() del modal
+
+        // 2. Obtenemos el ID del item de la base de datos a partir del array local.
+        // Es importante verificar que el item exista para evitar errores.
+        if (isset($this->costItems[$itemIndex]['id'])) {
+            $itemId = $this->costItems[$itemIndex]['id'];
+
+            // 3. Actualizamos el array local para que la vista se refresque al instante.
+            $this->costItems[$itemIndex]['formula'] = $newFormulaLogic;
+
+            // 4. Buscamos el modelo en la BD y guardamos el cambio permanentemente.
+            $item = CostItem::find($itemId);
+            if ($item) {
+                $item->update([
+                    'formula' => $newFormulaLogic
+                ]);
+            }
+            
+            // 5. (Opcional pero recomendado) Muestra una notificación de éxito.
+            Flux::toast('Fórmula guardada exitosamente.');
+        }
     }
 
     public function mount()
@@ -79,8 +100,11 @@ class IndexBillsComponent extends Component
     }
 
     public function openCalculationStrategyModal($idx){
+
+        $logic = $this->costItems[$idx]['formula'];
         $mediator_dict = [
             'idx_item' => $idx,
+            'logic' => $logic
         ];
 
         $this->dispatch('mediator-calculation-strategy-modal', $mediator_dict);

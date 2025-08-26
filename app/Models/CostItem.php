@@ -25,6 +25,9 @@ class CostItem extends Model
         'formula',
     ];
 
+    protected $casts = [
+        'formula' => 'array',
+    ];
 
     /**
      * Get the service type that this cost item belongs to.

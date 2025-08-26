@@ -50,14 +50,13 @@
                         <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
                                 <div class="w-full mt-3 text-center sm:mt-0 sm:text-left">
-                                    <h3 class="text-lg font-medium leading-6 text-gray-900 uppercase">
-                                        ● Formulación
+                                    <h3 class="flex justify-between items-center text-lg font-medium leading-6 text-gray-900 uppercase">
+                                        <span>● Formulación</span>
                                         <flux:button icon="x-mark" variant="subtle" 
                                             wire:click="CloseModalClick('isVisibleCalculationStrategyComponent')"
                                             x-on:click="isVisibleCalculationStrategyComponent = false" 
                                         />
                                     </h3>
-
                                     <div class="space-y-4 p-4 bg-white rounded-lg shadow">
                                         <div class="border-b border-gray-200">
                                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">

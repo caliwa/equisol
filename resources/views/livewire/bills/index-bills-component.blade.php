@@ -17,7 +17,7 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
         <flux:breadcrumbs.item>{{ $serviceTypeName }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 
-    <flux:heading class="mt-2" size="xl">Gestión de Gastos</flux:heading>
+    <flux:heading class="mt-2" size="xl">Gestión Base de datos - Maestro Gastos</flux:heading>
     <div wire:dirty>Esperando sincronización...</div> 
     <div wire:dirty.remove>Los cambios están sincronizados.</div>
 

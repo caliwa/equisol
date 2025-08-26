@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             
             $table->foreignId('service_type_id')->constrained()->onDelete('cascade');
-            $table->text('stage'); 
+            $table->string('stage'); 
             $table->string('concept');             
 
             $table->foreignId('currency_id')->nullable()->constrained('currencies_master');
 
-            $table->string('formula_notes')->nullable(); 
-            $table->text('formula')->nullable();
+            $table->string('formula_notes')->nullable();
+            $table->json('formula')->nullable();
             
             $table->timestamps();
 

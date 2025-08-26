@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('rates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->foreignId('weight_tier_id')->constrained()->onDelete('cascade');
+            $table->foreignId('weight_tier_id')->constrained();
             
             // Esta es la tarifa por unidad (kg, lb, etc.)
             $table->decimal('rate_value', 10, 3);

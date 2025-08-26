@@ -37,12 +37,31 @@ class CalculationStrategyComponent extends Component
     public function mount_artificially($dict){
         $this->zIndexModal = $dict['zIndexModal'];
 
-        $this->idx_variable = $dict['idx_item'] ?? null;
+        $this->idx_variable = $dict['idx_item'];
 
-        $this->costItem = new CostItem();
-        $this->expression = $this->costItem->formula_string ?? '';
-        $this->ruleSet = $this->costItem->rules ?? ['default_value' => 0, 'rules' => []];
-        $this->mode = !empty($this->costItem->rules) ? 'rules' : 'formula';
+        $logic = json_decode($dict['logic'], true);
+
+        if (!empty($logic)) {
+            // Determina el modo y llena los datos basado en el 'type'
+            $this->mode = $logic['type'];
+
+            if ($this->mode == 'formula') {
+                $this->expression = $logic['expression'] ?? '';
+            } elseif ($this->mode == 'rules') {
+                $this->ruleSet = $logic['expression'] ?? ['default_value' => 0, 'rules' => []];
+            }
+        } else {
+            // Es un item nuevo, establece valores por defecto
+            $this->mode = 'formula';
+            $this->expression = '';
+            $this->ruleSet = ['default_value' => 0, 'rules' => []];
+            $this->addRule();
+        }
+
+        // $this->costItem = new CostItem();
+        // $this->expression = $this->costItem->formula_string ?? '';
+        // $this->ruleSet = $this->costItem->rules ?? ['default_value' => 0, 'rules' => []];
+        // $this->mode = !empty($this->costItem->rules) ? 'rules' : 'formula';
 
         $this->isVisibleCalculationStrategyComponent = true;
         
@@ -180,30 +199,47 @@ class CalculationStrategyComponent extends Component
 
     public function save()
     {
+
+
+        // $datosDeEntrada = [
+        //     'OTRA_VARIABLE' => 2000, // Este valor es dinámico
+        //     'PESO' => 150,
+        //     'CIF' => 8500,
+        // ];
+        // $evaluador = new ExpressionLanguage();
+
+        // $resultadoFinal = $evaluador->evaluate(
+        //     $this->expression,  // La receta de la BD
+        //     $datosDeEntrada    // Los ingredientes de esta operación
+        // );
+
         $mediator_dict = [
-            'expression' => $this->expression,
             'idx_item' => $this->idx_variable
         ];
-        $this->dispatch('mediator-calculation-to-index-bills', $mediator_dict);
-        $this->dispatch('MediatorSetModalFalse', 'isVisibleCalculationStrategyComponent');
-        return;
-
-        $datosDeEntrada = [
-            'OTRA_VARIABLE' => 2000, // Este valor es dinámico
-            'PESO' => 150,
-            'CIF' => 8500,
-        ];
-        $evaluador = new ExpressionLanguage();
-
-        dd($this->expression);
-
-        $resultadoFinal = $evaluador->evaluate(
-            $this->expression,  // La receta de la BD
-            $datosDeEntrada    // Los ingredientes de esta operación
-        );
 
         // 3. ¡Listo!
-        dd($resultadoFinal);
+        if ($this->mode == 'formula') {
+            // Construye el objeto para el tipo "formula"
+            $logicToSave = [
+                'type' => 'formula',
+                'expression' => $this->expression
+            ];
+            // Opcional: Extraer y añadir las variables
+            // preg_match_all('/[A-Z_]+/', $this->expression, $matches);
+            // $logicToSave['required_variables'] = ...;
+
+        } else { // Asumimos que es 'rules'
+            // Construye el objeto para el tipo "rules"
+            $logicToSave = [
+                'type' => 'rules',
+                'expression' => $this->ruleSet
+            ];
+        }
+
+        $mediator_dict['logic'] = json_encode($logicToSave);
+
+        $this->dispatch('mediator-calculation-to-index-bills', $mediator_dict);
+        $this->dispatch('MediatorSetModalFalse', 'isVisibleCalculationStrategyComponent');
 
         return;
         if ($this->mode === 'formula') {

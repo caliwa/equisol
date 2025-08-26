@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call(FreightRatesSeeder::class);
         $this->call(CostServiceTypeSeeder::class);
         $this->call(WorldSeeder::class);
+        $this->call(CostItemsTableSeeder::class);
     }
 }
