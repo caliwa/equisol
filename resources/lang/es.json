@@ -1,4 +1,9 @@
 {
     "No results found": "No se encontraron resultados",
-    "Search...": "Buscar..."
+    "Search...": "Buscar...",
+    "Showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "Go to page :page": "Ir a la página :page"
 }

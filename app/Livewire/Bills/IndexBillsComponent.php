@@ -154,7 +154,7 @@ class IndexBillsComponent extends Component
         
         CostItem::create([
             'service_type_id' => $this->serviceTypeId,
-            'stage' => $this->newStage,
+            'stage' => ucfirst(trim($this->newStage)),
             'concept' => $this->newConcept,
         ]);
 
@@ -162,11 +162,15 @@ class IndexBillsComponent extends Component
         $this->dispatch('escape-enabled');
         $this->loadCostItems();
     }
-    
+
+    #[On('removeItem')]
     public function removeItem($itemId)
     {
         CostItem::destroy($itemId);
         $this->loadCostItems();
+        Flux::modal('dichotomic-modal')->close();
+        $this->dispatch('escape-enabled');
+        Flux::toast('Concepto eliminado correctamente.', 'Éxito');
     }
 
     public function render()

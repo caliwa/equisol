@@ -129,38 +129,6 @@
             </div>
         </div>
     </flux:modal>
-    
-    <flux:modal
-        x-data="{ isLoadingDichotomicModal: false }" 
-        name="dichotomic-modal" class="min-w-[22rem]" x-on:close="isLoadingDichotomicModal = false; escapeEnabled = true;">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg" x-text="modalDichotomicHeading"></flux:heading>
-                <flux:text class="mt-2">
-                    <span x-text="modalDichotomicMessage"></span>
-                </flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:spacer />
-                <flux:modal.close>
-                    <flux:button variant="ghost">Cancelar</flux:button>
-                </flux:modal.close>
-                <flux:button @click="blockInteractions($event)" 
-                    x-on:click="isLoadingDichotomicModal = true; $wire.call(modalDichotomicMethod, modalDichotomicParam)" 
-                    variant="primary"
-                    color="blue"
-                >
-                    <template x-if="isLoadingDichotomicModal">
-                        <flux:icon.loading />
-                    </template>
-
-                    <template x-if="!isLoadingDichotomicModal">
-                        <span x-text="modalDichotomicBtnText"></span>
-                    </template>
-                </flux:button>
-            </div>
-        </div>
-    </flux:modal>
 
     <flux:modal
     x-data="{ isLoadingTariffFlyoutModal: false }"
@@ -255,7 +223,7 @@
     </flux:modal>
 
     <div class="flex items-center mt-2">
-        <flux:heading class="mr-2" size="xl">Gestión Base de datos - Maestro</flux:heading>
+        <flux:heading class="mr-2" size="xl">Gestión Base de datos - Maestro Pick Up/Fletes</flux:heading>
         @if($serviceTypeName == 'Flete Aéreo' )<flux:badge class="animate-window mt-[2px]" color="purple" size="sm" inset="top bottom"> Relación 1000 Kg -> 1 Ton 6 m³</flux:badge>@endif
     </div>
 
@@ -323,6 +291,7 @@
             <flux:radio wire:click="SelectMasterTypeService('Pick Up Marítimo')" value="pu_maritimo" label="Pick Up Marítimo" />
             <flux:radio wire:click="SelectMasterTypeService('Flete Aéreo')" value="flete_aereo" label="Flete Aéreo" />
             <flux:radio wire:click="SelectMasterTypeService('Flete Marítimo')" value="flete_maritimo" label="Flete Marítimo" />
+            <flux:radio wire:click="SelectMasterTypeService('Flete Courier')" value="flete_courier" label="Flete Courier" />
         </flux:radio.group>
 
         {{-- Spacer para empujar botones a la derecha --}}
@@ -399,7 +368,7 @@
                                                 message: `¿Estás seguro de que quieres eliminar el país '{{ $column['label'] }}' y todas sus tarifas?`,
                                                 modalDichotomicBtnText: 'Borrar'
                                             })"
-                                            class="bg-red-500!  flex-shrink-0" icon="x-mark" icon:variant="outline" />
+                                            class="bg-red-500! flex-shrink-0" icon="x-mark" icon:variant="outline" />
                                     </flux:tooltip>
                                 @endif
                             </div>

@@ -160,7 +160,9 @@
                                                                         <input type="number" wire:model.live="ruleSet.rules.{{ $ruleIndex }}.result" class="form-input font-bold" placeholder="Resultado">
                                                                     </div>
                                                                 </div>
-                                                                <button wire:click="removeRule({{ $ruleIndex }})" class="p-2 text-gray-400 hover:text-red-600">&times;</button>
+                                                                @if($ruleIndex !== 0)
+                                                                    <button wire:click="removeRule({{ $ruleIndex }})" class="p-2 text-gray-400 hover:text-red-600">&times;</button>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @empty
@@ -189,7 +191,10 @@
                                             @endif
 
                                         <div class="flex justify-end pt-4 border-t mt-4">
-                                            <button wire:click="save" class="py-2 px-6 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
+                                            <button 
+                                                wire:click="save"
+                                                @click="loadingSpinner($event);"
+                                                class="py-2 px-6 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
                                                 Guardar Configuración
                                             </button>
                                         </div>

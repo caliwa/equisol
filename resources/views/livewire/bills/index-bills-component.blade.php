@@ -44,10 +44,10 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                 </flux:select>
             </flux:field>
             <flux:field label="Concepto del Costo">
-                <flux:input wire:model="newConcept" placeholder="Ej. Transporte Nacional" />
+                <flux:input  wire:model="newConcept" @keydown.enter="loadingSpinner($event)" wire:keydown.enter="addNewItem" placeholder="Ej. Transporte Nacional" />
             </flux:field>
             <div class="md:col-span-2 flex justify-end">
-                <flux:button @click="loadingSpinner($event);" wire:click="addNewItem"  icon="plus">Añadir Concepto</flux:button>
+                <flux:button @click="loadingSpinner($event);" wire:click="addNewItem" icon="plus">Añadir Concepto</flux:button>
             </div>
         </div>
     </div>
@@ -56,10 +56,10 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
     <div class="mt-6 w-full overflow-x-auto">
         <flux:table>
             <flux:table.columns>
-                <flux:table.column>Concepto</flux:table.column>
-                <flux:table.column>Moneda</flux:table.column>
-                <flux:table.column>Fórmula</flux:table.column>
-                <flux:table.column>Acciones</flux:table.column>
+                <flux:table.column align="center">Concepto</flux:table.column>
+                <flux:table.column align="center">Moneda</flux:table.column>
+                <flux:table.column align="center">Fórmula</flux:table.column>
+                <flux:table.column align="center">Acciones</flux:table.column>
             </flux:table.columns>
             
             <flux:table.rows>
@@ -104,18 +104,21 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                                         placeholder="ej. max(monto * 0.0025, 348900)"
                                         />
                                     
-                                    <flux:button
-                                        @click="blockInteractions($event)"
-                                        icon="calculator"
-                                        icon:variant="outline"
-                                        x-bind:disabled="isDisabledCalculationStrategyModal"
-                                        x-bind:class="[
-                                            'absolute! top-0! right-0! rounded-r-md!',
-                                            isDisabledCalculationStrategyModal ? 'opacity-30 pointer-events-none animate-pulse' : ''
-                                        ]"
-                                        wire:click="openCalculationStrategyModal({{ $index }})"
-                                    >
-                                    </flux:button>
+                                    <flux:tooltip content="Oprime para editar la fórmula" position="top">
+                                        <flux:button
+                                            @click="blockInteractions($event)"
+                                            icon="calculator"
+                                            icon:variant="outline"
+                                            x-bind:disabled="isDisabledCalculationStrategyModal"
+                                            x-bind:class="[
+                                                'absolute! top-0! right-0! rounded-r-md!',
+                                                isDisabledCalculationStrategyModal ? 'opacity-30 pointer-events-none animate-pulse' : ''
+                                            ]"
+                                            wire:click="openCalculationStrategyModal({{ $index }})"
+                                        >
+                                        </flux:button>
+                                    </flux:tooltip>
+
                                 </div>
 
                                         
@@ -125,11 +128,19 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                             <flux:table.cell>
                                 <flux:tooltip content="Borrar columna" position="top">
                                     <flux:button variant="danger" size="xs"
-                                        icon="x-mark"
+                                        @click="prepareDichotomic({
+                                            method: 'removeItem',
+                                            param: {{ $item['id'] }},
+                                            heading: 'Borrar Concepto',
+                                            message: `¿Estás seguro de eliminar el concepto '{{ $item['concept'] }}'?`,
+                                            modalDichotomicBtnText: 'Borrar'
+                                        })"
+                                        class="bg-red-500! flex-shrink-0"
                                         icon:variant="outline"
-                                        wire:click="removeItem({{ $item['id'] }})"
-                                        wire:confirm="¿Estás seguro de eliminar el concepto '{{ $item['concept'] }}'?"
-                                    />
+                                    
+                                    >
+                                    Eliminar
+                                    </flux:button>
                                 </flux:tooltip>
 
                             </flux:table.cell>

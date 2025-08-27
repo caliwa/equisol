@@ -30,7 +30,7 @@ class LoginComponent extends Component
 
         Flux::toast('Bienvenido, ' . $this->user . '!', variant: 'success');
 
-        $this->redirectRoute('menu', navigate:true);
+        $this->redirectRoute('masters', navigate:true);
     }
 
     public function render()

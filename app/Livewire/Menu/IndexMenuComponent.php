@@ -11,18 +11,21 @@ use Nnjeim\World\World;
 use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
-use Livewire\Attributes\Isolate;
+use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
+use App\Livewire\Traits\ResetValidationWrapperTrait;
 use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 
 #[Isolate]
 class IndexMenuComponent extends Component
 {
-    use AdapterValidateLivewireInputTrait;
+    use AdapterValidateLivewireInputTrait,
+        ResetValidationWrapperTrait;
 
     public array $table_columns = [];
     public array $rows_data = [];
@@ -89,6 +92,11 @@ class IndexMenuComponent extends Component
 
     function SelectMasterTypeService($serviceTypeName, $firstTime = null)
     {
+        if($serviceTypeName == 'Flete Courier'){
+            $this->redirectRoute('providers.index', navigate:true);
+            $this->dispatch('escape-enabled');
+            return;
+        }
         $this->serviceTypeName = $serviceTypeName;
         $serviceType = ServiceType::firstOrCreate(['name' => $serviceTypeName]);
         $this->serviceTypeId = $serviceType->id;
@@ -222,6 +230,7 @@ class IndexMenuComponent extends Component
         $this->dispatch('escape-enabled');
     }
 
+    #[On('editCountry')]
     public function editCountry($dict)
     {
         $dict = (array)json_decode($dict);
@@ -450,6 +459,7 @@ class IndexMenuComponent extends Component
         $this->loadRateTableData();
     }
 
+    #[On('removeColumn')]
     public function removeColumn($serviceId)
     {
         DB::transaction(function() use ($serviceId) {
@@ -469,11 +479,12 @@ class IndexMenuComponent extends Component
                 }
             }
         });
+        $this->loadRateTableData();
         Flux::toast('País eliminado correctamente.', 'Éxito');
         Flux::modal('dichotomic-modal')->close();
-        $this->loadRateTableData();
     }
 
+    #[On('removeRow')]
     public function removeRow($tierId)
     {
         WeightTier::destroy($tierId);
@@ -482,9 +493,6 @@ class IndexMenuComponent extends Component
         $this->loadRateTableData();
     }
 
-    public function resetValidationWrapper(){
-        $this->resetErrorBag();
-    }
 
     public function render()
     {

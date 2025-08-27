@@ -47,6 +47,7 @@ class CalculationStrategyComponent extends Component
 
             if ($this->mode == 'formula') {
                 $this->expression = $logic['expression'] ?? '';
+                $this->addRule();
             } elseif ($this->mode == 'rules') {
                 $this->ruleSet = $logic['expression'] ?? ['default_value' => 0, 'rules' => []];
             }
@@ -54,7 +55,6 @@ class CalculationStrategyComponent extends Component
             // Es un item nuevo, establece valores por defecto
             $this->mode = 'formula';
             $this->expression = '';
-            $this->ruleSet = ['default_value' => 0, 'rules' => []];
             $this->addRule();
         }
 
@@ -78,6 +78,8 @@ class CalculationStrategyComponent extends Component
 
     // --- Propiedades para el MODO FÓRMULA ---
     public string $expression = '';
+    public bool $isUpdatedExpression = true;
+
     public array $testVariables = ['PESO' => 100, 'CIF' => 5000, 'OTRA_VARIABLE' => 2000];
     public $testResultFormula = null;
     public ?string $testError = null;
@@ -90,6 +92,9 @@ class CalculationStrategyComponent extends Component
 
     public function setMode(string $mode)
     {
+        if($mode == 'rules'){
+            $this->isUpdatedExpression = false;
+        }
         $this->mode = $mode;
     }
 
@@ -115,6 +120,7 @@ class CalculationStrategyComponent extends Component
 
     public function addToken(string $token)
     {
+        $this->isUpdatedExpression = true;
         // Lista de tokens que SIEMPRE deben llevar espacios
         $tokensWithSpaces = ['+', '-', '*', '/', ',', 'PESO', 'CIF', 'OTRA_VARIABLE'];
 
@@ -132,6 +138,7 @@ class CalculationStrategyComponent extends Component
 
     public function backspace()
     {
+        $this->reset(['isUpdatedExpression']);
         $this->expression = trim(mb_substr($this->expression, 0, -1));
     }
 
@@ -139,6 +146,7 @@ class CalculationStrategyComponent extends Component
 
     public function clearExpression()
     {
+        $this->reset(['isUpdatedExpression']);
         $this->expression = '';
         $this->testResultFormula = null;
         $this->testError = null;
@@ -152,8 +160,10 @@ class CalculationStrategyComponent extends Component
         $el = new ExpressionLanguage();
         try {
             $this->testResultFormula = $el->evaluate($this->expression, $this->testVariables);
+            $this->isUpdatedExpression = false;
         } catch (\Exception $e) {
             $this->testError = "Error en la fórmula: " . $e->getMessage();
+            $this->reset(['isUpdatedExpression']);
         }
     }
 
@@ -199,7 +209,10 @@ class CalculationStrategyComponent extends Component
 
     public function save()
     {
-
+        if($this->isUpdatedExpression){
+            $this->dispatch('confirm-validation-modal', 'Por favor, pruebe la fórmula antes de guardar. Si la ha modificado, pruebe y vuelva a intentarlo.');
+            return;
+        }
 
         // $datosDeEntrada = [
         //     'OTRA_VARIABLE' => 2000, // Este valor es dinámico
@@ -238,25 +251,11 @@ class CalculationStrategyComponent extends Component
 
         $mediator_dict['logic'] = json_encode($logicToSave);
 
+        $this->dispatch('escape-enabled');
+
         $this->dispatch('mediator-calculation-to-index-bills', $mediator_dict);
         $this->dispatch('MediatorSetModalFalse', 'isVisibleCalculationStrategyComponent');
-
-        return;
-        if ($this->mode === 'formula') {
-            $this->costItem->update([
-                'formula_string' => $this->expression,
-                'rules' => null, // Limpia el otro modo
-            ]);
-        } else {
-            $this->costItem->update([
-                'rules' => $this->ruleSet,
-                'formula_string' => null, // Limpia el otro modo
-            ]);
-        }
-        $this->dispatch('saved');
     }
-
-
 
     public function ResetModalVariables(){
         $this->resetErrorBag();

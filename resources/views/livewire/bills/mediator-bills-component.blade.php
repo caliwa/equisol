@@ -120,6 +120,41 @@
 
     "
 >
+
+    <flux:modal
+        x-data="{ isLoadingDichotomicModal: false }" 
+        name="dichotomic-modal" class="min-w-[22rem]" x-on:close="isLoadingDichotomicModal = false; escapeEnabled = true;">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg" x-text="modalDichotomicHeading"></flux:heading>
+                <flux:text class="mt-2">
+                    <span x-text="modalDichotomicMessage"></span>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancelar</flux:button>
+                </flux:modal.close>
+                <flux:button @click="blockInteractions($event)" 
+                    x-on:click="isLoadingDichotomicModal = true; 
+                    {{-- $wire.call(modalDichotomicMethod, modalDichotomicParam) --}}
+                    $wire.dispatch(modalDichotomicMethod, [modalDichotomicParam])
+                    " 
+                    variant="primary"
+                    color="blue"
+                >
+                    <template x-if="isLoadingDichotomicModal">
+                        <flux:icon.loading />
+                    </template>
+
+                    <template x-if="!isLoadingDichotomicModal">
+                        <span x-text="modalDichotomicBtnText"></span>
+                    </template>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
     <flux:modal
         x-data="{ isLoadingConfirmValidationModal: false }" 
         name="confirm-validation-modal" class="min-w-[22rem]" x-on:close="isLoadingConfirmValidationModal = false; escapeEnabled = true;">
@@ -226,7 +261,7 @@
 
     <livewire:bills.index-bills-component wire:key="ibc-1"/>
 
-    <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/>
+    {{-- <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/> --}}
 
     <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
 
