@@ -1,4 +1,98 @@
-<div class="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+<div 
+x-data="{
+        tarifModalParam: null,
+        tarifModalMethod: null,
+        {{-- parseAndSetWeight(inputValue, rowIndex) {
+            $wire.ZoneIdRate = rowIndex;
+            $flux.modal('operand-modal').show();
+        }, --}}
+
+        originalWeight: null,
+        currentWeight: null,
+        previousWeight: null,
+        nextWeight: null,
+        parseAndSetWeight(prev, current, next) {
+            console.log(prev, current, next);
+            $wire.originalWeight = parseFloat(current);
+            $wire.currentWeight = parseFloat(current);
+            $wire.previousWeight = parseFloat(prev);
+            // Si next es el string 'null', lo convertimos al valor null de JS
+            $wire.nextWeight = (next === 'null') ? null : parseFloat(next);
+            $flux.modal('edit-weight-modal').show();
+        },
+        isLoadingWeightFlyoutModal: false,
+    }"
+    class="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+
+
+    <flux:modal
+    x-on:close="
+        isLoadingWeightFlyoutModal = false;
+        escapeEnabled = true;
+        $wire.originalWeight = null;
+        $wire.newWeight = null;
+        $wire.currentWeight = null;
+        $wire.previousWeight = null;
+        $wire.nextWeight = null;
+        $wire.resetValidationWrapper();"
+    {{-- @parse-and-set-weight.window="parseAndSetWeight($event.detail.prev, $event.detail.current, $event.detail.next)"
+     --}}
+    x-on:x-unblock-weight-flyout-modal.window="
+        isLoadingWeightFlyoutModal = false;
+    "
+    name="edit-weight-modal" variant="flyout">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Editar Peso</flux:heading>
+                <flux:text class="mt-2">
+                    Modifica el valor del peso. El nuevo valor debe respetar los límites inferior y superior.
+                </flux:text>
+            </div>
+            
+            <div>
+                <flux:input
+                    wire:model="newWeight"
+                    {{-- @keydown.enter="blockInteractions($event); isLoadingTariffModal = true;" --}}
+                    type="number"
+                    label="Nuevo Valor del Peso (KG)"
+                    step="0.5"
+                />
+            </div>
+
+            <flux:callout color="lime">
+                <flux:callout.text>
+                    El valor debe ser mayor que <strong x-text="$wire.previousWeight"></strong>.
+                    <template x-if="$wire.nextWeight !== null">
+                        <span>Y menor que <strong x-text="$wire.nextWeight"></strong>.</span>
+                    </template>
+                    <template x-if="$wire.nextWeight === null">
+                        <span>No hay límite superior.</span>
+                    </template>
+                </flux:callout.text>
+            </flux:callout>
+
+            <div class="flex">
+                <flux:button 
+                    @click="blockInteractions($event);"
+                    x-on:click="
+                        isLoadingWeightFlyoutModal = true; 
+                        $wire.updateWeight();
+                    "
+                    variant="primary"
+                >
+                    <template x-if="isLoadingWeightFlyoutModal">
+                        <flux:icon.loading />
+                    </template>
+
+                    <template x-if="!isLoadingWeightFlyoutModal">
+                        <span>Modificar Peso</span>
+                    </template>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+
     <flux:modal
         x-data="{ isLoadingTariffModal: false }" 
         x-on:x-unblock-loading-tariff-modal.window="
@@ -8,9 +102,8 @@
         x-on:close="
             isLoadingTariffModal = false;
             escapeEnabled = true;
-            $wire.numericValueTariff = null;
-            $wire.rowIndexTariff = null;
-            $wire.columnNameTariff = null;
+            $wire.numericPriceRate = null;
+            $wire.ZoneIdRate = null;
             $wire.resetValidationWrapper();">
         <flux:badge color="lime">Modificación</flux:badge> Cotizador FI
 
@@ -19,8 +112,11 @@
 
             <div>
                 <flux:input 
-                @keydown.enter="blockInteractions($event); isLoadingTariffModal = true; $wire.addRowTariff();"
-                wire:model="numericValueTariff" type="number" icon="currency-dollar" placeholder="Tarifa" label="Tarifa para la zona seleccionada"/>
+                @keydown.enter="blockInteractions($event); isLoadingTariffModal = true;"
+                wire:model="numericPriceRate" 
+                type="number"
+                step="0.01"
+                icon="currency-dollar" placeholder="Tarifa" label="Tarifa para la zona seleccionada"/>
             </div>
             <div class="flex gap-2">
                 <flux:spacer />
@@ -28,7 +124,12 @@
                     <flux:button variant="ghost">Cancelar</flux:button>
                 </flux:modal.close>
                 <flux:button
-                    @click="blockInteractions($event);" x-on:click="isLoadingTariffModal = true; $wire.addRowTariff();" variant="primary" color="green">
+                    @click="blockInteractions($event);" x-on:click="
+                    {{-- $wire.addRowTariff(); --}}
+                    isLoadingTariffModal = true; 
+                    $wire.updateRate();
+                    "
+                    variant="primary" color="green">
                     <template x-if="isLoadingTariffModal">
                         <flux:icon.loading />
                     </template>
@@ -61,30 +162,42 @@
 
                 <flux:table.rows>
                     @forelse($ratesByWeight as $weight => $rates)
-                        <flux:table.row wire:key="rate-weight-{{ $weight }}">
-                            <flux:table.cell class="font-semibold text-gray-800 dark:text-gray-200">
-                                
-                                <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" placement="top">
-                                    <flux:badge color="lime" class="cursor-pointer" variant="pill" icon="scale">
-                                        {{ $weight }}
-                                    </flux:badge>
-                                </flux:tooltip>
-
-                            </flux:table.cell>
+                    <flux:table.row wire:key="rate-weight-{{ $weight }}">
+                        <flux:table.cell class="font-semibold text-gray-800 dark:text-gray-200">
+                            
+                            <flux:tooltip content="Editar Peso (KG)">
+                                <flux:badge color="lime" class="cursor-pointer" variant="pill" icon="scale"
+                                    @click="
+                                        parseAndSetWeight(
+                                            '{{ $weightKeys[$loop->index - 1] ?? 0 }}',
+                                            '{{ $weight }}',                            
+                                            '{{ $weightKeys[$loop->index + 1] ?? 'null' }}'
+                                        );
+                                    "
+                                >
+                                    {{ $weight }}
+                                </flux:badge>
+                            </flux:tooltip>
+                            
+                        </flux:table.cell>
                             @foreach($zones as $zone)
                                 <flux:table.cell align="center">
                                     @if(isset($rates[$zone]))
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Peso (KG)" position="bottom">
-                                            <flux:button icon="percent-badge"
+                                        <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" position="bottom">
+                                            <flux:button icon="swatch"
                                                 class="w-32"
-                                                x-bind:disabled="isDisabledOpenTariffModal"
                                                 placeholder="Peso"
                                                 @click="
-                                                        {{-- $wire.numericValueTariff = {{$rows_data[$rowIndex][$column['name']]}};
-                                                        $wire.rowIndexTariff = {{ $rowIndex }};
-                                                        $wire.columnNameTariff = '{{ $column['name'] }}'; --}}
-                                                        $flux.modal('tariff-modal').show();
-                                                    "
+                                                    $wire.numericPriceRate = {{$rates[$zone]->price}};
+                                                    $wire.ZoneIdRate = {{$rates[$zone]->id}};
+                                                    {{-- $wire.set('tarifModalParam', {{ json_encode([
+                                                            'numericPriceRate' => $rates[$zone]->price,
+                                                            'columnNameTariff' => $rates[$zone]->id
+                                                        ]) 
+                                                    }}); --}}
+                                                    $flux.modal('tariff-modal').show();
+                                                "
+                                              
                                                 {{-- type="number"  --}}
                                                 {{-- step="0.01" --}}
                                                 {{-- value="{{ $rates[$zone]->price }}"  --}}

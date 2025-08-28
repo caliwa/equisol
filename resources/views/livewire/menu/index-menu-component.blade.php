@@ -53,7 +53,9 @@
             <div>
                 <flux:input 
                 @keydown.enter="blockInteractions($event); isLoadingTariffModal = true; $wire.addRowTariff();"
-                wire:model="numericValueTariff" type="number" icon="currency-dollar" placeholder="Tarifa" label="Tarifa Mínima"/>
+                wire:model="numericValueTariff"
+                type="number"
+                icon="currency-dollar" placeholder="Tarifa" label="Tarifa Mínima"/>
             </div>
             <div class="flex gap-2">
                 <flux:spacer />
@@ -108,7 +110,10 @@
             <div>
                 <flux:input 
                 @keydown.enter="blockInteractions($event); isLoadingPercentageModal = true; $wire.addRowPercentage();"
-                wire:model="numericValueTariff" type="number" icon="percent-badge" placeholder="Porcentaje (ej: 5.51)" label="Porcentaje"/>
+                wire:model="numericValueTariff"
+                type="number"
+                step="0.01"
+                icon="percent-badge" placeholder="Porcentaje (ej: 5.51)" label="Porcentaje"/>
             </div>
 
             <div class="flex gap-2">

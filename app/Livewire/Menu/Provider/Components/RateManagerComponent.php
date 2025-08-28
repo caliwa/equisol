@@ -29,6 +29,20 @@ class RateManagerComponent extends Component
     public $newWeight = '';
     public $newPrices = [];
 
+    #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
+    #[Validate('numeric', message: 'VALIDACIÓN: El valor debe ser un número.')]
+    #[Validate('min:0.00', message: 'VALIDACIÓN: El valor debe ser mayor o igual a 0.')]
+    #[Validate('max:999999.99', message: 'VALIDACIÓN: El valor no puede ser mayor a 999999.99.')]
+    public float $numericPriceRate;
+
+    public $ZoneIdRate;
+
+    public $weightKeys = [];
+    public $originalWeight;
+    public $currentWeight;
+    public $previousWeight;
+    public $nextWeight;
+
     public function mount(RateProvider $provider)
     {
         $this->provider = $provider;
@@ -37,21 +51,93 @@ class RateManagerComponent extends Component
 
     public function loadRates()
     {
-        $this->ratesByWeight = $this->provider->rates()->orderBy('weight_kg', 'asc')->get()->groupBy('weight_kg')->map(fn ($rates) => $rates->keyBy('zone'));
-        $this->zones = $this->provider->rates()->distinct()->orderBy('zone', 'asc')->pluck('zone');
+        $allRates = $this->provider->rates()->orderBy('weight_kg', 'asc')->get();
+
+        $this->ratesByWeight = $allRates->groupBy('weight_kg')
+            ->map(function ($rates) {
+                return $rates->keyBy('zone');
+            });
+
+        $this->zones = $allRates->pluck('zone')->unique()->sort();
+
+        // --- LÍNEA AÑADIDA ---
+        // Obtenemos una lista simple y ordenada de los pesos para usarla en el frontend.
+        $this->weightKeys = $this->ratesByWeight->keys()->toArray();
+
+        // Inicializa los precios para la nueva fila
         foreach ($this->zones as $zone) {
             $this->newPrices[$zone] = 0;
         }
     }
 
-    public function updateRate($rateId, $newPrice)
+    public function updateWeight()
     {
-        $rate = ProviderRate::find($rateId);
-        if ($rate && is_numeric($newPrice)) {
-            $rate->price = $newPrice;
-            $rate->save();
+        // 1. Encontrar el peso anterior y siguiente para la validación
+        // Los datos se leen directamente de las propiedades públicas
+        $weightIndex = array_search($this->originalWeight, $this->weightKeys);
+        $previousWeight = $this->weightKeys[$weightIndex - 1] ?? 0;
+        $nextWeight = $this->weightKeys[$weightIndex + 1] ?? null;
+
+
+        $rules = [
+            'required',
+            'numeric',
+            "gt:{$previousWeight}",
+            Rule::unique('provider_rates', 'weight_kg')
+                ->where('rate_provider_id', $this->provider->id)
+                ->ignore($this->originalWeight, 'weight_kg')
+        ];
+
+        if ($nextWeight !== null) {
+            $rules[] = "lt:{$nextWeight}";
         }
-        // No es necesario recargar toda la tabla para un solo cambio
+
+        try {
+            $validatedData = $this->validate(['newWeight' => $rules]);
+        } catch (\Exception $e) {
+            $this->dispatch('x-unblock-weight-flyout-modal');
+            $this->dispatch('escape-enabled');
+            $this->addError('newWeight', $e->getMessage());
+            $validatedData = $this->validate(['newWeight' => $rules]);
+            return;
+        }
+
+
+        ProviderRate::where('rate_provider_id', $this->provider->id)
+            ->where('weight_kg', $this->originalWeight)
+            ->update(['weight_kg' => $validatedData['newWeight']]);
+
+
+        $this->loadRates();
+
+        Flux::toast('Peso actualizado exitosamente.');
+        Flux::modal('edit-weight-modal')->close();
+        $this->dispatch('escape-enabled');
+    }
+
+    public function updateRate()
+    {
+        $variables_to_validate = [
+            'numericPriceRate',
+        ];
+
+        try {
+            $this->validateLivewireInput($variables_to_validate);
+        } catch (\Exception $e) {
+            $this->dispatch('x-unblock-loading-tariff-modal');
+            $this->dispatch('escape-enabled');
+            $this->validateLivewireInput($variables_to_validate);
+        }
+
+        
+        $rate = ProviderRate::find($this->ZoneIdRate);
+        if ($rate && is_numeric($this->numericPriceRate)) {
+            $rate->price = $this->numericPriceRate;
+            $rate->save();
+            Flux::modal('tariff-modal')->close();
+            Flux::toast('Tarifa modificada correctamente.', 'Éxito');
+            return;
+        }
     }
     
     public function addRateRow()
