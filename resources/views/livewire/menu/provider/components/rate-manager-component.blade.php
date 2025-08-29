@@ -24,8 +24,7 @@ x-data="{
     }"
     class="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
 
-
-    <flux:modal
+<flux:modal
     x-on:close="
         isLoadingWeightFlyoutModal = false;
         escapeEnabled = true;
@@ -35,8 +34,6 @@ x-data="{
         $wire.previousWeight = null;
         $wire.nextWeight = null;
         $wire.resetValidationWrapper();"
-    {{-- @parse-and-set-weight.window="parseAndSetWeight($event.detail.prev, $event.detail.current, $event.detail.next)"
-     --}}
     x-on:x-unblock-weight-flyout-modal.window="
         isLoadingWeightFlyoutModal = false;
     "
@@ -45,31 +42,48 @@ x-data="{
             <div>
                 <flux:heading size="lg">Editar Peso</flux:heading>
                 <flux:text class="mt-2">
-                    Modifica el valor del peso. El nuevo valor debe respetar los límites inferior y superior.
+                    Modifica el valor del peso. El nuevo valor debe respetar los límites.
                 </flux:text>
             </div>
             
-            <div>
-                <flux:input
-                    wire:model="newWeight"
-                    {{-- @keydown.enter="blockInteractions($event); isLoadingTariffModal = true;" --}}
-                    type="number"
-                    label="Nuevo Valor del Peso (KG)"
-                    step="0.5"
-                />
-            </div>
+            {{-- NUEVO DISEÑO ESTILO MEDIDOR VERTICAL --}}
+            <div class="max-w-xs mx-auto space-y-3 text-center">
 
-            <flux:callout color="lime">
-                <flux:callout.text>
-                    El valor debe ser mayor que <strong x-text="$wire.previousWeight"></strong>.
-                    <template x-if="$wire.nextWeight !== null">
-                        <span>Y menor que <strong x-text="$wire.nextWeight"></strong>.</span>
-                    </template>
-                    <template x-if="$wire.nextWeight === null">
-                        <span>No hay límite superior.</span>
-                    </template>
-                </flux:callout.text>
-            </flux:callout>
+                <div>
+                    <flux:label>Máximo</flux:label>
+                    <div class="mt-1 flex items-center justify-center rounded-md bg-gray-800 p-3 text-2xl font-semibold text-white font-mono tracking-wider">
+                        <template x-if="$wire.nextWeight !== null">
+                            <span x-text="$wire.nextWeight"></span>
+                        </template>
+                        <template x-if="$wire.nextWeight === null">
+                            <span>&infin;</span>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="py-2">
+                    <flux:field>
+                        <flux:label>Nuevo Peso (KG)</flux:label>
+                        <flux:input
+                            wire:model="newWeight"
+                            type="number"
+                            step="0.5"
+                            {{-- Clases para hacerlo el elemento principal, con ! para forzar el estilo --}}
+                            class="!text-4xl !font-bold !text-center !text-lime-600 !h-16"
+                        />
+                        <flux:error name="newWeight" />
+                    </flux:field>
+                </div>
+
+                <div>
+                    <flux:label>Mínimo</flux:label>
+                    <div class="mt-1 flex items-center justify-center rounded-md bg-gray-800 p-3 text-2xl font-semibold text-white font-mono tracking-wider"
+                         x-text="$wire.previousWeight ?? 'N/A'">
+                    </div>
+                </div>
+
+            </div>
+            {{-- FIN DE LA SECCIÓN MODIFICADA --}}
 
             <div class="flex">
                 <flux:button 
@@ -79,11 +93,11 @@ x-data="{
                         $wire.updateWeight();
                     "
                     variant="primary"
+                    color="lime"
                 >
                     <template x-if="isLoadingWeightFlyoutModal">
                         <flux:icon.loading />
                     </template>
-
                     <template x-if="!isLoadingWeightFlyoutModal">
                         <span>Modificar Peso</span>
                     </template>
@@ -91,7 +105,6 @@ x-data="{
             </div>
         </div>
     </flux:modal>
-
 
     <flux:modal
         x-data="{ isLoadingTariffModal: false }" 

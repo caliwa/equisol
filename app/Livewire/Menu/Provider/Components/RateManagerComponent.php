@@ -72,41 +72,49 @@ class RateManagerComponent extends Component
 
     public function updateWeight()
     {
-        // 1. Encontrar el peso anterior y siguiente para la validación
-        // Los datos se leen directamente de las propiedades públicas
         $weightIndex = array_search($this->originalWeight, $this->weightKeys);
         $previousWeight = $this->weightKeys[$weightIndex - 1] ?? 0;
         $nextWeight = $this->weightKeys[$weightIndex + 1] ?? null;
 
 
         $rules = [
-            'required',
-            'numeric',
-            "gt:{$previousWeight}",
-            Rule::unique('provider_rates', 'weight_kg')
-                ->where('rate_provider_id', $this->provider->id)
-                ->ignore($this->originalWeight, 'weight_kg')
+            'newWeight' => [
+                'required',
+                'numeric',
+                "gt:{$previousWeight}",
+            ]
         ];
 
         if ($nextWeight !== null) {
-            $rules[] = "lt:{$nextWeight}";
+            $rules['newWeight'][] = "lt:{$nextWeight}";
         }
+
+        $rules['newWeight'][] = Rule::unique('provider_rates', 'weight_kg')
+            ->where('rate_provider_id', $this->provider->id)
+            ->ignore($this->originalWeight, 'weight_kg');
+
+        $messages = [
+            'newWeight.required' => 'El campo de nuevo peso es obligatorio.',
+            'newWeight.numeric' => 'El valor debe ser numérico.',
+            'newWeight.gt' => 'El peso debe ser mayor que :value kg.',
+            'newWeight.lt' => 'El peso debe ser menor que :value kg.',
+            'newWeight.unique' => 'El valor de este peso ya está en uso.',
+        ];
 
         try {
-            $validatedData = $this->validate(['newWeight' => $rules]);
-        } catch (\Exception $e) {
-            $this->dispatch('x-unblock-weight-flyout-modal');
-            $this->dispatch('escape-enabled');
-            $this->addError('newWeight', $e->getMessage());
-            $validatedData = $this->validate(['newWeight' => $rules]);
-            return;
-        }
+                $validatedData = $this->validate($rules, $messages);
+            } catch (\Exception $e) {
+                $this->dispatch('x-unblock-weight-flyout-modal');
+                $this->dispatch('escape-enabled');
+                $this->addError('newWeight', $e->getMessage());
+                $validatedData = $this->validate($rules, $messages);
+                return;
+            }
 
-
+        // 5. Si la validación pasa, actualizar el registro
         ProviderRate::where('rate_provider_id', $this->provider->id)
             ->where('weight_kg', $this->originalWeight)
             ->update(['weight_kg' => $validatedData['newWeight']]);
-
 
         $this->loadRates();
 
