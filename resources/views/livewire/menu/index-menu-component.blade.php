@@ -230,6 +230,7 @@
     <div class="flex items-center mt-2">
         <flux:heading class="mr-2" size="xl">Gestión Base de datos - Maestro Pick Up/Fletes</flux:heading>
         @if($serviceTypeName == 'Flete Aéreo' )<flux:badge class="animate-window mt-[2px]" color="purple" size="sm" inset="top bottom"> Relación 1000 Kg -> 1 Ton 6 m³</flux:badge>@endif
+        @if($serviceTypeName == 'Flete Marítimo' )<flux:badge class="animate-window mt-[2px]" color="purple" size="sm" inset="top bottom"> Relación 1000 Kg -> 1 Ton 1 m³</flux:badge>@endif
     </div>
 
     <div wire:dirty>Esperando sincronización...</div> 

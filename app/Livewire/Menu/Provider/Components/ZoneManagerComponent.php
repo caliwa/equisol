@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Menu\Provider\Components;
 
-use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 use Flux\Flux;
 use Livewire\Component;
 use Nnjeim\World\World;
@@ -10,16 +9,19 @@ use Livewire\Attributes\On;
 use App\Models\ProviderZone;
 use App\Models\RateProvider;
 use Livewire\WithPagination;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Validate;
-use Illuminate\Support\Facades\Validator;
 use Livewire\WithoutUrlPagination;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
+use App\Livewire\Traits\GetFlagEmojiTrait;
+use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 
 #[Isolate]
 class ZoneManagerComponent extends Component
 {
     use AdapterValidateLivewireInputTrait,
+        GetFlagEmojiTrait,
         WithPagination,
         WithoutUrlPagination;
     
@@ -182,20 +184,6 @@ class ZoneManagerComponent extends Component
         ProviderZone::find($zoneId)->delete();
         Flux::toast('Zona eliminada correctamente.', 'Éxito');
         Flux::modal('dichotomic-modal')->close();
-    }
-
-    function getFlagEmoji(string $countryCode): string
-    {
-        if (strlen($countryCode) !== 2) {
-            return '';
-        }
-
-        $codePoints = array_map(
-            fn($char) => 127397 + ord(strtoupper($char)),
-            str_split($countryCode)
-        );
-
-        return mb_convert_encoding('&#' . implode(';&#', $codePoints) . ';', 'UTF-8', 'HTML-ENTITIES');
     }
 
     public function render()

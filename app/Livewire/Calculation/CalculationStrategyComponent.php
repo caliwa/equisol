@@ -42,7 +42,6 @@ class CalculationStrategyComponent extends Component
         $logic = json_decode($dict['logic'], true);
 
         if (!empty($logic)) {
-            // Determina el modo y llena los datos basado en el 'type'
             $this->mode = $logic['type'];
 
             if ($this->mode == 'formula') {
@@ -52,16 +51,10 @@ class CalculationStrategyComponent extends Component
                 $this->ruleSet = $logic['expression'] ?? ['default_value' => 0, 'rules' => []];
             }
         } else {
-            // Es un item nuevo, establece valores por defecto
             $this->mode = 'formula';
             $this->expression = '';
             $this->addRule();
         }
-
-        // $this->costItem = new CostItem();
-        // $this->expression = $this->costItem->formula_string ?? '';
-        // $this->ruleSet = $this->costItem->rules ?? ['default_value' => 0, 'rules' => []];
-        // $this->mode = !empty($this->costItem->rules) ? 'rules' : 'formula';
 
         $this->isVisibleCalculationStrategyComponent = true;
         

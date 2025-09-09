@@ -103,7 +103,7 @@ $maritimoId = CostServiceType::where('name', 'Gastos Mar')->firstOrFail()->id;
         // GASTOS COURIER
         //======================================================================
         $gastosCourier = [
-            ['stage' => 'Destino', 'concept' => 'Seguro', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'max(VALOR_MERCANCIA * 0.01, 16.5)'])],
+            ['stage' => 'Destino', 'concept' => 'Seguro', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'max(CIF * 0.01, 16.5)'])],
             ['stage' => 'Destino', 'concept' => 'Pick up', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'PESO * 1.10'])],
             ['stage' => 'Destino', 'concept' => 'Firma Doc', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 12.5])],
             ['stage' => 'Destino', 'concept' => 'Entrega Destino', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'PESO * 1.10'])],

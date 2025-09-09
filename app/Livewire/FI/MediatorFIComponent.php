@@ -1,40 +1,30 @@
 <?php
 
-namespace App\Livewire\Menu\Provider;
+namespace App\Livewire\FI;
 
-use Flux\Flux;
 use Livewire\Component;
-use Livewire\Attributes\On;
-use App\Models\RateProvider;
+
 use Livewire\Attributes\Lazy;
-use Livewire\Attributes\Isolate;
 use App\Livewire\Traits\ModalEnableTrait;
-use App\Livewire\Traits\EscapeEnableTrait;
 use App\Livewire\Traits\ProcessingEscapeTrait;
 use App\Livewire\Traits\AdapterLivewireExceptionTrait;
 
-#[Isolate]
-class MediatorProviderComponent extends Component
+#[Lazy]
+class MediatorFIComponent extends Component
 {
     use AdapterLivewireExceptionTrait,
         ModalEnableTrait,
         // EscapeEnableTrait,
         ProcessingEscapeTrait;
 
-    public ?RateProvider $provider = null;
-
-    public function mount($provider = null): void
-    {
-        $this->provider = $provider;
-    }
+    public $modalConfirmValidationMessage;
 
     public function placeholder(){
         return view('livewire.placeholder.index-menu-placeholder');
     }
 
-
     public function render()
     {
-        return view('livewire.menu.provider.mediator-provider-component');
+        return view('livewire.f-i.mediator-f-i-component');
     }
 }
