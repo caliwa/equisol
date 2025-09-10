@@ -59,10 +59,11 @@ $maritimoId = CostServiceType::where('name', 'Gastos Mar')->firstOrFail()->id;
                         ['result' => 1000000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 500], ['variable' => 'PESO', 'operator' => '<=', 'value' => 1000]]],
                         ['result' => 1800000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 1000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 4000]]],
                         ['result' => 2200000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 4000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 8000]]],
+                        ['result' => 6000000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 8000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 32000]]],
                     ]
                 ]
             ])],
-            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => null, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
+            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
         ];
 
         foreach ($gastosMar as $item) {
@@ -84,14 +85,16 @@ $maritimoId = CostServiceType::where('name', 'Gastos Mar')->firstOrFail()->id;
              ['stage' => 'Destino', 'concept' => 'Bodegaje', 'currency_id' => $copId, 'formula' => json_encode([
                  'type' => 'rules', 'expression' => [
                      'default_value' => 3840000, 'rules' => [
-                         ['result' => 562300, 'conditions' => [['variable' => 'PESO', 'operator' => '>=', 'value' => 1], ['variable' => 'PESO', 'operator' => '<=', 'value' => 500]]],
+                         ['result' => 592500, 'conditions' => [['variable' => 'PESO', 'operator' => '>=', 'value' => 1], ['variable' => 'PESO', 'operator' => '<=', 'value' => 500]]],
                          ['result' => 640000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 500], ['variable' => 'PESO', 'operator' => '<=', 'value' => 1000]]],
                          ['result' => 1280000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 1000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 4000]]],
-                         ['result' => 2200000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 4000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 8000]]],
+                         ['result' => 2240000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 4000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 8000]]],
+                         ['result' => 3840000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 8000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 32000]]],
                      ]
                  ]
              ])],
              ['stage' => 'Destino', 'concept' => 'Manejo del Bodegaje', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 120000])],
+             ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
         ];
 
         foreach ($gastosAereo as $item) {

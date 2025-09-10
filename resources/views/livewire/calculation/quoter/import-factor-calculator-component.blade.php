@@ -2,8 +2,7 @@
 
     <flux:breadcrumbs>
         <flux:breadcrumbs.item href="#" icon="home" />
-        <flux:breadcrumbs.item href="#">Maestros</flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>test</flux:breadcrumbs.item>
+        <flux:breadcrumbs.item href="#">Cotizador F.I</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 
     <flux:heading class="mt-2" size="xl">Gestión Base de datos - Maestro Gastos</flux:heading>
@@ -107,14 +106,17 @@
                                     <flux:input 
                                         wire:model.live="variables_pallet.{{$idx}}.width"
                                         wire:keydown="CalculatePallet('{{$idx}}', 'width')"
+                                        @input="$wire.ResetShowValues();"
                                         size="sm" type="number" placeholder="A"></flux:input>
                                     <flux:input 
                                         wire:model.live="variables_pallet.{{$idx}}.length"
                                         wire:keydown="CalculatePallet('{{$idx}}', 'length')"
+                                        @input="$wire.ResetShowValues();"
                                         size="sm" type="number" placeholder="L"></flux:input>
                                     <flux:input 
                                         wire:model.live="variables_pallet.{{$idx}}.height"
                                         wire:keydown="CalculatePallet('{{$idx}}', 'height')"
+                                        @input="$wire.ResetShowValues();"
                                         size="sm" type="number" placeholder="H"></flux:input>
                                     <div class="flex justify-center">
                                         <flux:button icon="x-mark" icon:variant="outline" size="xs" variant="danger"
@@ -130,6 +132,7 @@
                         <flux:input
                             size="sm"
                             mask:dynamic="$money($input)" 
+                            @input="$wire.ResetShowValues();"
                             wire:model.fill="weight"
                             type="text"
                             id="weight"
@@ -146,7 +149,12 @@
                 <div>
                     <flux:label>Arancel</flux:label>
                     <flux:input.group>
-                        <flux:input size="sm" type="text" id="tariff" wire:model.fill="tariff" class="block w-full flex-1 rounded-none rounded-l-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-800 dark:border-zinc-600 dark:text-slate-200"></flux:input>
+                        <flux:input 
+                        size="sm" 
+                        type="number"
+                        id="tariff"
+                        @input="$wire.ResetShowValues();"
+                        wire:model.fill="tariff" class="block w-full flex-1 rounded-none rounded-l-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-800 dark:border-zinc-600 dark:text-slate-200"></flux:input>
                         <flux:input.group.suffix>%</flux:input.group.suffix>
                     </flux:input.group>
                 <div>
@@ -156,6 +164,7 @@
                         {{-- mask:dynamic="$money($input)" --}}
                         type="number"
                         id="cost"
+                        @input="$wire.ResetShowValues();"
                         wire:model.fill="cost"
                         class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-zinc-800 dark:border-zinc-600 dark:text-slate-200"></flux:input>
                         <div class="isolate inline-flex rounded-md shadow-sm">

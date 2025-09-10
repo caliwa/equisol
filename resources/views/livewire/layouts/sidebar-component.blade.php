@@ -3,9 +3,9 @@
         <flux:sidebar.header>
             <flux:sidebar.brand
                 href="#"
-                logo="https://fluxui.dev/img/demo/logo.png"
-                logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png"
-                name="Acme Inc."
+                logo="{{asset('img/equisol-logo-1.png')}}"
+                {{-- logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png" --}}
+                name="Equisol S.A.S"
             />
 
             <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />

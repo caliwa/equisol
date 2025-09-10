@@ -12,6 +12,8 @@ use App\Models\CostServiceType;
 use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -33,7 +35,7 @@ class IndexBillsComponent extends Component
     public string $newStage = 'Destino';
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un concepto')]
     #[Validate('min:3', message: 'VALIDACIÓN: Debe ingresar mínimo 3 caracteres')]
-    #[Validate('unique:cost_items,concept', message: 'VALIDACIÓN: Este concepto ya existe')]
+    // #[Validate('unique:cost_items,concept', message: 'VALIDACIÓN: Este concepto ya existe')]
     public string $newConcept = '';
 
 
@@ -139,16 +141,32 @@ class IndexBillsComponent extends Component
             'newConcept',
         ];
 
+        $this->newConcept = trim($this->newConcept);
+
         try {
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Exception $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
-
-            // Flux::modal('confirm-validation-modal')->show();
-            // $this->modalConfirmValidationMessage = $e->getMessage();
-
-            // $this->dispatch('escape-enabled');
             $this->validateLivewireInput($variables_to_validate);
+            return;
+        }
+
+        try {
+            Validator::make(
+                ['concept' => $this->newConcept],
+                [
+                    'concept' => Rule::unique('cost_items', 'concept')
+                        ->where('service_type_id', $this->serviceTypeId)
+                ],
+                [
+                    'concept.unique' => 'VALIDACIÓN: Este concepto ya existe para el tipo de gasto seleccionado.',
+                ]
+            )->validate();
+
+        } catch (\Exception $e) {
+            $this->dispatch('escape-enabled');
+            $this->dispatch('confirm-validation-modal', $e->getMessage());
+            $this->addError('newConcept', $e->getMessage());
             return;
         }
         

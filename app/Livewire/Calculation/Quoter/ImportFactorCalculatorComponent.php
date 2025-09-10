@@ -158,6 +158,8 @@ class ImportFactorCalculatorComponent extends Component
         }
         $this->nextIdxArray -= 1;
 
+        $this->ResetShowValues();
+
         unset($this->variables_pallet[$idx]);
 
         $this->variables_pallet = array_values($this->variables_pallet);
@@ -208,17 +210,34 @@ class ImportFactorCalculatorComponent extends Component
         }else if ($this->transport_mode == 'courrier'){
             $this->CalculateCourrierImportFactor();
         }
+
+        Flux::toast('Cálculo realizado exitosamente.', 'Cotizador F.I');
+
+        $this->isCalculated = true;
     }
+    PUBLIC $isCalculated = false;
+
 
     public function ResetShowValues(){
-        $this->reset(['cost_show', 'origin_cost_show', 'freight_show', 
-            'insurance_show', 'cif_show', 'tariff_show', 
-            'destination_costs_show', 'ddp_cost', 'import_factor']);
+        if($this->isCalculated){
+            $this->reset(['isCalculated']);
+            Flux::toast('Los valores se han reiniciado, por favor vuelva a calcular.', 'Cotizador F.I', duration: 5000);
+
+            $this->reset(['cost_show', 'origin_cost_show', 'freight_show', 
+                'insurance_show', 'cif_show', 'tariff_show', 
+                'destination_costs_show', 'ddp_cost', 'import_factor']);
+        }
+
     }
 
     public function updatedRole(){
         $this->ResetShowValues();
     }
+
+    public function updatedOrigin(){
+        $this->ResetShowValues();
+    }
+
 
     protected function ValidatePallet($fieldName){
         $this->validate(
@@ -295,6 +314,7 @@ class ImportFactorCalculatorComponent extends Component
         $rateRecordPrice = $this->CalculateCourierShippingCost();
         
         $CIF = $this->cost + $rateRecordPrice;
+        $this->freight_show = $rateRecordPrice;
         $this->cif_show = $CIF;
 
         $serviceTypeName = "Gastos Courier";
@@ -364,7 +384,7 @@ class ImportFactorCalculatorComponent extends Component
         $CIF = $this->cost + $rateRecordPrice + $ratePickUpPrice;
         $this->freight_show = $rateRecordPrice;
         $this->cif_show = $CIF;
-        $this->tariff_show = $this->tariff;
+        // $this->tariff_show = $this->tariff;
 
         $serviceTypeName = "Gastos Aéreo";
 
@@ -373,6 +393,7 @@ class ImportFactorCalculatorComponent extends Component
         $variables_evaluate = [
             'CIF' => $CIF,
             'PESO' => $this->weight,
+            'ARANCEL_MANUAL' => $this->tariff,
         ];
 
         $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate);
