@@ -120,6 +120,7 @@
 
     "
 >
+
     <flux:modal
         x-data="{ isLoadingDichotomicModal: false }" 
         name="dichotomic-modal" class="min-w-[22rem]" x-on:close="isLoadingDichotomicModal = false; escapeEnabled = true;">
@@ -201,7 +202,6 @@
             </div>
         </div>
     </div> 
-
     <div
         wire:offline
         x-data="{ showButton: false }"
@@ -257,16 +257,8 @@
         </div>
     @endif
 
-    @if(is_null($provider))
-        <livewire:menu.provider.index-provider-component wire:key="ipc-1"/>
-    @else
-        <livewire:menu.provider.index-provider-editor-component 
-        :provider="$provider"
-        wire:key="ipec-1"/>
-    @endif
+    <livewire:calculation.calculation-strategy-component wire:key="csc-1"/>
 
-    {{-- <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/> --}}
-
-    <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
+    <livewire:calculation.bills.index-bills-component wire:key="ibc-1"/>
 
 </div>

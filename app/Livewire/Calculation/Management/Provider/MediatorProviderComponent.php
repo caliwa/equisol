@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu\Provider;
+namespace App\Livewire\Calculation\Management\Provider;
 
 use Flux\Flux;
 use Livewire\Component;
@@ -35,6 +35,6 @@ class MediatorProviderComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.provider.mediator-provider-component');
+        return view('livewire.calculation.management.provider.mediator-provider-component');
     }
 }

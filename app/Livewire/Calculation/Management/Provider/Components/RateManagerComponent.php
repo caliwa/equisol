@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu\Provider\Components;
+namespace App\Livewire\Calculation\Management\Provider\Components;
 
 use Flux\Flux;
 use Livewire\Component;
@@ -131,10 +131,13 @@ class RateManagerComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('x-unblock-loading-tariff-modal');
             $this->dispatch('escape-enabled');
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
+            return;
         }
 
         
@@ -156,10 +159,12 @@ class RateManagerComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
 
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
             return;
         }
 
@@ -210,6 +215,6 @@ class RateManagerComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.provider.components.rate-manager-component');
+        return view('livewire.calculation.management.provider.components.rate-manager-component');
     }
 }

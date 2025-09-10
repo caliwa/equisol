@@ -5,13 +5,13 @@
     
     {{-- Invocamos el componente para gestionar las ZONAS de este proveedor --}}
     <div class="mt-8">
-        <livewire:menu.provider.components.zone-manager-component
+        <livewire:calculation.management.provider.components.zone-manager-component
         :provider="$provider"/>
     </div>
     
     {{-- Invocamos el componente para gestionar las TARIFAS de este proveedor --}}
     <div class="mt-8">
-        <livewire:menu.provider.components.rate-manager-component
+        <livewire:calculation.management.provider.components.rate-manager-component
         :provider="$provider"/>
     </div>
 </div>

@@ -224,8 +224,4 @@
 
     <livewire:calculation.quoter.import-factor-calculator-component wire:key="ifcc-1"/>
 
-    <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/>
-
-    <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
-
 </div>

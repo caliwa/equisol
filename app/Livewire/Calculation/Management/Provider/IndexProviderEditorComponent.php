@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu\Provider;
+namespace App\Livewire\Calculation\Management\Provider;
 
 use Livewire\Component;
 use Livewire\Attributes\Isolate;
@@ -18,6 +18,6 @@ class IndexProviderEditorComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.provider.index-provider-editor-component');
+        return view('livewire.calculation.management.provider.index-provider-editor-component');
     }
 }

@@ -76,6 +76,7 @@
                 }
             }, 100);
         },
+
         modalDichotomicHeading: '',
         modalDichotomicMessage: '',
         modalDichotomicMethod: '',
@@ -94,6 +95,9 @@
                 console.warn('Modal no encontrado');
             }
         },
+
+        modalConfirmValidationHeading: '• ATENCIÓN',
+        modalConfirmValidationMessage: $wire.entangle('modalConfirmValidationMessage').live,
 
     }"
     x-on:escape-enabled.window="
@@ -116,7 +120,6 @@
 
     "
 >
-
     <flux:modal
         x-data="{ isLoadingDichotomicModal: false }" 
         name="dichotomic-modal" class="min-w-[22rem]" x-on:close="isLoadingDichotomicModal = false; escapeEnabled = true;">
@@ -148,6 +151,33 @@
                         <span x-text="modalDichotomicBtnText"></span>
                     </template>
                 </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    <flux:modal
+        x-data="{ isLoadingConfirmValidationModal: false }" 
+        name="confirm-validation-modal" class="min-w-[22rem]" x-on:close="isLoadingConfirmValidationModal = false; escapeEnabled = true;">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg" x-text="modalConfirmValidationHeading"></flux:heading>
+                <flux:text class="mt-2">
+                    <span x-text="modalConfirmValidationMessage"></span>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Continuar</flux:button>
+                </flux:modal.close>
+
+                <flux:modal.close>
+                    <flux:button
+                        variant="primary"
+                        color="red"
+                    >
+                        Cerrar
+                    </flux:button>
+                </flux:modal.close>
             </div>
         </div>
     </flux:modal>
@@ -227,10 +257,13 @@
         </div>
     @endif
 
-    <livewire:menu.index-menu-component wire:key="imc-1"/>
+    @if(is_null($provider))
+        <livewire:calculation.management.provider.index-provider-component wire:key="ipc-1"/>
+    @else
+        <livewire:calculation.management.provider.index-provider-editor-component 
+        :provider="$provider"
+        wire:key="ipec-1"/>
+    @endif
 
-    <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/>
-
-    <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
 
 </div>

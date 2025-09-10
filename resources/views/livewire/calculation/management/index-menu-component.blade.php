@@ -27,7 +27,7 @@
     >
     
     <flux:breadcrumbs>
-        <flux:breadcrumbs.item href="#" icon="home" />
+        <flux:breadcrumbs.item href="#" icon="cube-transparent" />
         <flux:breadcrumbs.item href="#">Maestros</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>{{ $serviceTypeName }}</flux:breadcrumbs.item>
     </flux:breadcrumbs>

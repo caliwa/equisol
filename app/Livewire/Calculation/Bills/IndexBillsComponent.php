@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Bills;
+namespace App\Livewire\Calculation\Bills;
 
 use Flux\Flux;
 use App\Models\Service;
@@ -145,9 +145,11 @@ class IndexBillsComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
             return;
         }
 
@@ -194,7 +196,7 @@ class IndexBillsComponent extends Component
     public function render()
     {
         $groupedItems = collect($this->costItems)->groupBy('stage');
-        return view('livewire.bills.index-bills-component', [
+        return view('livewire.calculation.bills.index-bills-component', [
             'groupedItems' => $groupedItems,
         ]);
     }

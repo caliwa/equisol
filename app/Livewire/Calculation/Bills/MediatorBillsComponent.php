@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Bills;
+namespace App\Livewire\Calculation\Bills;
 
 use Flux\Flux;
 use Livewire\Component;
@@ -37,6 +37,6 @@ class MediatorBillsComponent extends Component
 
     public function render()
     {
-        return view('livewire.bills.mediator-bills-component');
+        return view('livewire.calculation.bills.mediator-bills-component');
     }
 }

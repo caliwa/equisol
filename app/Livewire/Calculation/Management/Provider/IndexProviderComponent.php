@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu\Provider;
+namespace App\Livewire\Calculation\Management\Provider;
 
 use Flux\Flux;
 use Livewire\Component;
@@ -49,13 +49,15 @@ class IndexProviderComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
 
             // Flux::modal('confirm-validation-modal')->show();
             // $this->modalConfirmValidationMessage = $e->getMessage();
 
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
             return;
         }
 
@@ -82,6 +84,6 @@ class IndexProviderComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.provider.index-provider-component');
+        return view('livewire.calculation.management.provider.index-provider-component');
     }
 }

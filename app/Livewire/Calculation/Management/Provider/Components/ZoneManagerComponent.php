@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu\Provider\Components;
+namespace App\Livewire\Calculation\Management\Provider\Components;
 
 use Flux\Flux;
 use Livewire\Component;
@@ -136,10 +136,12 @@ class ZoneManagerComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
 
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
             return;
         }
 
@@ -199,7 +201,7 @@ class ZoneManagerComponent extends Component
         }
 
         // 3. Pagina el resultado final de la consulta construida
-        return view('livewire.menu.provider.components.zone-manager-component', [
+        return view('livewire.calculation.management.provider.components.zone-manager-component', [
             'configuredZones' => $query->paginate(5)
         ]);
     }

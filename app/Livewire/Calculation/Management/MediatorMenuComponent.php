@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu;
+namespace App\Livewire\Calculation\Management;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -34,6 +34,6 @@ class MediatorMenuComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.mediator-menu-component');
+        return view('livewire.calculation.management.mediator-menu-component');
     }
 }

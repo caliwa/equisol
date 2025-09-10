@@ -76,7 +76,6 @@
                 }
             }, 100);
         },
-
         modalDichotomicHeading: '',
         modalDichotomicMessage: '',
         modalDichotomicMethod: '',
@@ -95,9 +94,6 @@
                 console.warn('Modal no encontrado');
             }
         },
-
-        modalConfirmValidationHeading: '• ATENCIÓN',
-        modalConfirmValidationMessage: $wire.entangle('modalConfirmValidationMessage').live,
 
     }"
     x-on:escape-enabled.window="
@@ -155,33 +151,6 @@
             </div>
         </div>
     </flux:modal>
-    <flux:modal
-        x-data="{ isLoadingConfirmValidationModal: false }" 
-        name="confirm-validation-modal" class="min-w-[22rem]" x-on:close="isLoadingConfirmValidationModal = false; escapeEnabled = true;">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg" x-text="modalConfirmValidationHeading"></flux:heading>
-                <flux:text class="mt-2">
-                    <span x-text="modalConfirmValidationMessage"></span>
-                </flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:spacer />
-                <flux:modal.close>
-                    <flux:button variant="ghost">Continuar</flux:button>
-                </flux:modal.close>
-
-                <flux:modal.close>
-                    <flux:button
-                        variant="primary"
-                        color="red"
-                    >
-                        Cerrar
-                    </flux:button>
-                </flux:modal.close>
-            </div>
-        </div>
-    </flux:modal>
     {{-- <div id="bg-validation-input" 
             class="fixed inset-0 flex items-center justify-center bg-white/50" 
             style="z-index: 2147483647 !important; position: fixed !important;" 
@@ -202,6 +171,7 @@
             </div>
         </div>
     </div> 
+
     <div
         wire:offline
         x-data="{ showButton: false }"
@@ -257,12 +227,7 @@
         </div>
     @endif
 
-    <livewire:calculation.calculation-strategy-component wire:key="csc-1"/>
+    <livewire:calculation.management.index-menu-component wire:key="imc-1"/>
 
-    <livewire:bills.index-bills-component wire:key="ibc-1"/>
-
-    {{-- <livewire:validation.confirm-validation-modal-component wire:key="conf-1"/> --}}
-
-    <livewire:validation.dichotomic-asking-modal-component wire:key="dicho-ask"/>
 
 </div>

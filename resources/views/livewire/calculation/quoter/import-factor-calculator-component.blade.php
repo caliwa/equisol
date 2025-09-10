@@ -1,7 +1,7 @@
 <div class="mt-2 bg-slate-50 dark:bg-zinc-900 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-zinc-700 max-w-7xl mx-auto">
 
     <flux:breadcrumbs>
-        <flux:breadcrumbs.item href="#" icon="home" />
+        <flux:breadcrumbs.item href="#" icon="globe-alt" />
         <flux:breadcrumbs.item href="#">Cotizador F.I</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 

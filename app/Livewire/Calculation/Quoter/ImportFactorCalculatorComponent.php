@@ -50,14 +50,16 @@ class ImportFactorCalculatorComponent extends Component
     public $transport_mode;
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un peso')]
     #[Validate('numeric', message: 'VALIDACIÓN: El peso debe ser un número')]
-    #[Validate('max:50', message: 'VALIDACIÓN: El peso no debe superar los 50 kgs')]
+    // #[Validate('max:50', message: 'VALIDACIÓN: El peso no debe superar los 50 kgs')] // <--- ELIMINA ESTA LÍNEA
     #[Validate('min:0.1', message: 'VALIDACIÓN: El peso debe ser mayor a 0 kgs')]
     public $weight = 0;
+
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un arancel')]
     public $tariff = 10;
+    
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un costo')]
     #[Validate('numeric', message: 'VALIDACIÓN: El costo debe ser numérico')]
-    #[Validate('max:2000', message: 'VALIDACIÓN: El costo no debe superar los 2000')]
+    // #[Validate('max:2000', message: 'VALIDACIÓN: El costo no debe superar los 2000')] // <--- ELIMINA ESTA LÍNEA
     #[Validate('min:0.1', message: 'VALIDACIÓN: El costo debe ser mayor a 0')]
     public $cost = 0;
 
@@ -191,10 +193,24 @@ class ImportFactorCalculatorComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+
+            if ($this->transport_mode === 'courrier') {
+
+                $this->validate([
+                    'weight' => 'numeric|max:50',
+                    'cost'   => 'numeric|max:2000',
+                ], [
+                    'weight.max' => 'VALIDACIÓN: El peso no debe superar los 50 kgs.',
+                    'cost.max'   => 'VALIDACIÓN: El costo no debe superar los 2000.',
+                ]);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('escape-enabled');
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
             $this->dispatch('confirm-validation-modal', $e->getMessage());
 
-            $this->validateLivewireInput($variables_to_validate);
             return;
         }
 
@@ -239,19 +255,21 @@ class ImportFactorCalculatorComponent extends Component
     }
 
 
-    protected function ValidatePallet($fieldName){
-        $this->validate(
-            [
-                $fieldName => 'required|numeric|min:1|max:150',
-            ],
-            [
-                $fieldName . '.required' => 'El valor del pallet es requerido, no puede estar vacío.',
-                $fieldName . '.numeric'  => 'Este campo del pallet solo acepta valores numéricos.',
-                $fieldName . '.min'      => 'El valor mínimo permitido en cada lado del pallet es 1.',
-                $fieldName . '.max'      => 'El valor máximo permitido en cada lado del pallet es 150.',
-            ]
-        );
+protected function ValidatePallet($fieldName)
+    {
+        $rule = 'required|numeric|min:1';
+        $messages = [
+            $fieldName . '.required' => 'El valor del pallet es requerido, no puede estar vacío.',
+            $fieldName . '.numeric'  => 'Este campo del pallet solo acepta valores numéricos.',
+            $fieldName . '.min'      => 'El valor mínimo permitido en cada lado del pallet es 1.',
+        ];
 
+        if ($this->transport_mode === 'courrier') {
+            $rule .= '|max:150';
+            $messages[$fieldName . '.max'] = 'El valor máximo permitido en cada lado del pallet es 150 cm.'; // Añade el mensaje para 'max'
+        }
+        
+        $this->validate([$fieldName => $rule], $messages);
     }
 
     public $total_volume = 0;
@@ -494,7 +512,8 @@ class ImportFactorCalculatorComponent extends Component
             ->orderBy('weight_kg', 'asc')
             ->first()
             ->price;
-                
+        
+
         if (!$rateRecordPrice) {
             $this->dispatch('confirm-validation-modal', 'El peso excede el límite de la tabla de tarifas');
             return;

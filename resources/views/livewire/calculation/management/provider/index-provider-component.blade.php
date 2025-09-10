@@ -1,7 +1,7 @@
 <div class="p-6">
 
     <flux:breadcrumbs>
-        <flux:breadcrumbs.item href="#" icon="home" />
+        <flux:breadcrumbs.item href="#" icon="cube-transparent" />
         <flux:breadcrumbs.item wire:click="BackToMastersView" href="#">Maestros</flux:breadcrumbs.item>
         <flux:breadcrumbs.item>Fletes Courier</flux:breadcrumbs.item>
     </flux:breadcrumbs>

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Menu;
+namespace App\Livewire\Calculation\Management;
 
 use Flux\Flux;
 use App\Models\Rate;
@@ -299,10 +299,13 @@ class IndexMenuComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('x-unblock-loading-percentage-modal');
             $this->dispatch('escape-enabled');
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
+            return;
         }
 
         $formattedValue = $this->numericValueTariff + 0;
@@ -324,10 +327,13 @@ class IndexMenuComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('x-unblock-loading-tariff-modal');
             $this->dispatch('escape-enabled');
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
+            return;
         }
 
         $formattedValue = $this->numericValueTariff + 0;
@@ -350,9 +356,12 @@ class IndexMenuComponent extends Component
 
         try {
             $this->validateLivewireInput($variables_to_validate);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('escape-enabled');
-            $this->validateLivewireInput($variables_to_validate);
+            foreach ($e->validator->errors()->getMessages() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
+            return;
         }
 
         $formattedValue = $this->numericValueTariff + 0;
@@ -484,6 +493,6 @@ class IndexMenuComponent extends Component
 
     public function render()
     {
-        return view('livewire.menu.index-menu-component');
+        return view('livewire.calculation.management.index-menu-component');
     }
 }
