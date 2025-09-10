@@ -52,9 +52,6 @@ class IndexProviderComponent extends Component
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('confirm-validation-modal', $e->getMessage());
 
-            // Flux::modal('confirm-validation-modal')->show();
-            // $this->modalConfirmValidationMessage = $e->getMessage();
-
             foreach ($e->validator->errors()->getMessages() as $field => $messages) {
                 $this->addError($field, $messages[0]);
             }

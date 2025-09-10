@@ -24,6 +24,7 @@ use App\Livewire\Traits\CalculateMasterRateTrait;
 use App\Livewire\Traits\AdapterLivewireExceptionTrait;
 use App\Livewire\Traits\AdapterValidateLivewireInputTrait;
 use App\Livewire\Traits\CleanInputMaskingTrait;
+use App\Models\Currency;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 
@@ -37,8 +38,8 @@ class ImportFactorCalculatorComponent extends Component
         CalculateMasterRateTrait;
 
     // Propiedades para "Cambio"
-    public $trm = '4150';
-    public $eur_usd = '4500';
+    public $trm;
+    public $eur_usd;
 
     // Propiedades para "Transporte"
     // public $transporte = 'courrier';
@@ -82,7 +83,21 @@ class ImportFactorCalculatorComponent extends Component
     public $ddp_cost = 0;
     public $import_factor = 0;
 
+    public $transit_days = 0;
+
+    public $nextIdxArray = 1;
+
+    public $variables_pallet = [];
+
+    public $selectedCountry;
+
+
     public function mount(){
+        $eur_trm = floatval(Currency::where('code', 'EUR')->first()->value);
+        $usd_trm = floatval(Currency::where('code', 'USD')->first()->value);
+
+        $this->eur_usd = floatval(number_format($eur_trm / $usd_trm, 2, '.', ''));
+        $this->trm = $usd_trm;
       // 1. Obtener tus países de origen como una Colección de Laravel.
         // Es mejor trabajar con colecciones que con arrays directamente.
         $this->origins_countries = Origin::all();
@@ -134,10 +149,6 @@ class ImportFactorCalculatorComponent extends Component
         return max($realWeight, $volumetricWeight);
     }
 
-    public $nextIdxArray = 1;
-
-    public $variables_pallet = [];
-
     public function AddValueInputVariables(){
         $this->resetErrorBag();
         if($this->nextIdxArray == 10){
@@ -175,8 +186,6 @@ class ImportFactorCalculatorComponent extends Component
     public function Get_InitPallet(){
         return ['width'=>0,'length'=>0,'height'=>0];
     }
-
-    public $selectedCountry;
     
     public function calculateBtn(){
 
@@ -227,11 +236,13 @@ class ImportFactorCalculatorComponent extends Component
             $this->CalculateCourrierImportFactor();
         }
 
+        $this->CalculateTransitDays($this->origin, $this->transport_mode);
+
         Flux::toast('Cálculo realizado exitosamente.', 'Cotizador F.I');
 
         $this->isCalculated = true;
     }
-    PUBLIC $isCalculated = false;
+    public $isCalculated = false;
 
 
     public function ResetShowValues(){
@@ -241,7 +252,7 @@ class ImportFactorCalculatorComponent extends Component
 
             $this->reset(['cost_show', 'origin_cost_show', 'freight_show', 
                 'insurance_show', 'cif_show', 'tariff_show', 
-                'destination_costs_show', 'ddp_cost', 'import_factor']);
+                'destination_costs_show', 'ddp_cost', 'import_factor', 'transit_days']);
         }
 
     }
@@ -254,8 +265,7 @@ class ImportFactorCalculatorComponent extends Component
         $this->ResetShowValues();
     }
 
-
-protected function ValidatePallet($fieldName)
+    protected function ValidatePallet($fieldName)
     {
         $rule = 'required|numeric|min:1';
         $messages = [
@@ -321,45 +331,19 @@ protected function ValidatePallet($fieldName)
         $this->total_volume = $accumulator;
     }
 
-
     public function setTransportMode($mode)
     {
         $this->ResetShowValues();
         $this->transport_mode = $mode;
     }
 
-    public function CalculateCourrierImportFactor(){    
-        $rateRecordPrice = $this->CalculateCourierShippingCost();
-        
-        $CIF = $this->cost + $rateRecordPrice;
-        $this->freight_show = $rateRecordPrice;
-        $this->cif_show = $CIF;
-
-        $serviceTypeName = "Gastos Courier";
-
-        $CostItems =  $this->StructureCostItems($serviceTypeName);
-
-        $variables_evaluate = [
-            'CIF' => $CIF,
-            'PESO' => $this->weight,
-        ];
-
-        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate);
-
-        $this->ddp_cost = ($cost_items_value + $CIF) - $this->cost;
-
-        $this->import_factor = ($this->ddp_cost / $this->cost );
-    }
-
-
-
     public function CalculateMaritimeImportFactor(){
         // Calculamos el peso cobrable ANTES de buscar la tarifa
         $chargeableWeight = $this->getChargeableWeight($this->weight, $this->total_volume);
         
-        $ratePickUpPrice = $this->calculateMasterRate('Pick Up Marítimo', $this->origin, $chargeableWeight);
-        $rateRecordPrice = $this->calculateMasterRate('Flete Marítimo', $this->origin, $chargeableWeight);
-        
+        $ratePickUpPrice = $this->calculateMasterRate('Pick Up Marítimo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
+        $rateRecordPrice = $this->calculateMasterRate('Flete Marítimo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
+
         if (is_null($rateRecordPrice)) {
             $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete marítimo para el origen y peso especificados.');
             return;
@@ -379,7 +363,7 @@ protected function ValidatePallet($fieldName)
             'ARANCEL_MANUAL' => $this->tariff,
         ];
 
-        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate);
+        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate, $this->trm, $this->eur_usd);
 
         $this->ddp_cost = ($cost_items_value + $CIF) - $this->cost;
         $this->import_factor = ($this->ddp_cost / $this->cost );
@@ -390,10 +374,10 @@ protected function ValidatePallet($fieldName)
         // Calculamos el peso cobrable ANTES de buscar la tarifa
         $chargeableWeight = $this->getChargeableWeight($this->weight, $this->total_volume);
 
-        $ratePickUpPrice = $this->calculateMasterRate('Pick Up Aéreo', $this->origin, $chargeableWeight);
+        $ratePickUpPrice = $this->calculateMasterRate('Pick Up Aéreo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
 
-        $rateRecordPrice = $this->calculateMasterRate('Flete Aéreo', $this->origin, $chargeableWeight); 
-        
+        $rateRecordPrice = $this->calculateMasterRate('Flete Aéreo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
+
         if (is_null($rateRecordPrice)) {
             $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete aéreo para el origen y peso especificados.');
             return;
@@ -414,9 +398,32 @@ protected function ValidatePallet($fieldName)
             'ARANCEL_MANUAL' => $this->tariff,
         ];
 
-        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate);
+        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate, $this->trm, $this->eur_usd);
 
         $this->ddp_cost = ($cost_items_value + $CIF) - $this->cost;
+        $this->import_factor = ($this->ddp_cost / $this->cost );
+    }
+
+        public function CalculateCourrierImportFactor(){    
+        $rateRecordPrice = $this->CalculateCourierShippingCost();
+        
+        $CIF = $this->cost + $rateRecordPrice;
+        $this->freight_show = $rateRecordPrice;
+        $this->cif_show = $CIF;
+
+        $serviceTypeName = "Gastos Courier";
+
+        $CostItems =  $this->StructureCostItems($serviceTypeName);
+
+        $variables_evaluate = [
+            'CIF' => $CIF,
+            'PESO' => $this->weight,
+        ];
+
+        $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate, $this->trm, $this->eur_usd);
+
+        $this->ddp_cost = ($cost_items_value + $CIF) - $this->cost;
+
         $this->import_factor = ($this->ddp_cost / $this->cost );
     }
 
@@ -439,11 +446,10 @@ protected function ValidatePallet($fieldName)
         return $CostItems;
     }
 
-    protected function EvaluateCostItem($CostItems, $variables_evaluate){
+    protected function EvaluateCostItem($CostItems, $variables_evaluate, $trm, $eur_usd){
         $count_formula = 0;
         $el = new ExpressionLanguage();
         $engine = new RuleEngineService();
-
 
         foreach ($CostItems as $idx => $item) {
             $evaluation = 0;
@@ -461,6 +467,13 @@ protected function ValidatePallet($fieldName)
 
             }else if($item_decoded['type'] == 'rules'){
                 $evaluation = $engine->process($expression, $variables_evaluate);
+            }
+
+            if($item['currency'] && $item['currency']['code'] == 'EUR'){
+                $evaluation = $evaluation * $eur_usd;
+            }
+            if($item['currency'] && $item['currency']['code'] == 'COP'){
+                $evaluation = $evaluation / $trm;
             }
 
             if($CostItems[$idx]['concept'] == 'Arancel'){
@@ -522,6 +535,20 @@ protected function ValidatePallet($fieldName)
         return $rateRecordPrice;
     }
 
+    public function CalculateTransitDays($originName, $modeName){
+        $origin = Origin::with('transitModes')->where('name', $originName)->first();
+
+        $days = null; 
+        if ($origin) {
+            $transitMode = $origin->transitModes->firstWhere('name', $modeName);
+            
+            if ($transitMode) {
+                $days = $transitMode->pivot->days;
+            }
+        }
+        $this->transit_days = $days ?? 0;
+    }
+
 //     protected function CalculateCourierShippingCost(){
     //     $dhl = 1;
     //     $provider = RateProvider::find($dhl);
@@ -554,6 +581,7 @@ protected function ValidatePallet($fieldName)
     public function loadCostItems($serviceTypeId)
     {
         $res = CostItem::where('service_type_id', $serviceTypeId)
+            ->with('currency:id,code')
             ->orderBy('stage')
             ->orderBy('concept')
             ->get()

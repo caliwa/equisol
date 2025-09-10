@@ -95,6 +95,9 @@
             }
         },
 
+
+        modalConfirmValidationHeading: '• ATENCIÓN',
+        modalConfirmValidationMessage: $wire.entangle('modalConfirmValidationMessage').live,
     }"
     x-on:escape-enabled.window="
         escapeEnabled = false;
@@ -148,6 +151,34 @@
                         <span x-text="modalDichotomicBtnText"></span>
                     </template>
                 </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+        <flux:modal
+        x-data="{ isLoadingConfirmValidationModal: false }" 
+        name="confirm-validation-modal" class="min-w-[22rem]" x-on:close="isLoadingConfirmValidationModal = false; escapeEnabled = true;">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg" x-text="modalConfirmValidationHeading"></flux:heading>
+                <flux:text class="mt-2">
+                    <span x-text="modalConfirmValidationMessage"></span>
+                </flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Continuar</flux:button>
+                </flux:modal.close>
+
+                <flux:modal.close>
+                    <flux:button
+                        variant="primary"
+                        color="red"
+                    >
+                        Cerrar
+                    </flux:button>
+                </flux:modal.close>
             </div>
         </div>
     </flux:modal>
@@ -228,6 +259,10 @@
     @endif
 
     <livewire:calculation.management.index-menu-component wire:key="imc-1"/>
+    
+    <livewire:calculation.transit.transit-time-manager-component wire:key="ttmc-1"/>
+
+    <livewire:calculation.currency.currency-manager-component wire:key="cmc-1"/>
 
 
 </div>

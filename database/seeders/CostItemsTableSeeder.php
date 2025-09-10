@@ -14,9 +14,9 @@ class CostItemsTableSeeder extends Seeder
      */
     public function run(): void
     {
-        Currency::firstOrCreate(['code' => 'COP', 'name' => 'Peso Colombiano']);
+        Currency::firstOrCreate(['code' => 'COP', 'name' => 'Peso Colombiano', 'value' => 4000.50]);
         // Primero, obtenemos los IDs que necesitaremos
-$maritimoId = CostServiceType::where('name', 'Gastos Mar')->firstOrFail()->id;
+        $maritimoId = CostServiceType::where('name', 'Gastos Mar')->firstOrFail()->id;
         $aereoId = CostServiceType::where('name', 'Gastos Aéreo')->firstOrFail()->id;
         $courierId = CostServiceType::where('name', 'Gastos Courier')->firstOrFail()->id;
 

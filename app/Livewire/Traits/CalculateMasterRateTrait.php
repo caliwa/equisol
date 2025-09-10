@@ -17,16 +17,15 @@ trait CalculateMasterRateTrait
      * @param float $weight El peso para el cálculo.
      * @return float|null El costo calculado o null si no se encuentra una tarifa.
      */
-    public function calculateMasterRate(string $serviceTypeName, string $countryName, float $weight): ?float
+    public function calculateMasterRate(string $serviceTypeName, string $countryName, float $weight, float $trm, float $eur_usd): ?float
     {
         // 1. Buscar el servicio específico que coincide con el tipo y el origen.
         $service = Service::whereHas('serviceType', function ($query) use ($serviceTypeName) {
             $query->where('name', $serviceTypeName);
         })->whereHas('origin', function ($query) use ($countryName) {
             $query->where('name', $countryName);
-        })->with(['rates.weightTier', 'origin', 'serviceType'])->first();
+        })->with(['rates.weightTier', 'origin', 'serviceType', 'currency:id,code'])->first();
 
-        // Si no se encuentra una combinación de servicio/país, no se puede calcular.
         if (!$service) {
             return null;
         }
@@ -72,6 +71,25 @@ trait CalculateMasterRateTrait
 
         // 4. El costo final no puede ser menor que la tarifa mínima del servicio.
         $minimumCharge = $service->minimum_charge;
+
+        if($service && $service->currency){
+            if($service->currency->code == 'EUR'){
+                // foreach($service->rates as $rate){
+                //     $rate->rate_value = $rate->rate_value  * $eur_usd;
+                // }
+                // $service->minimum_charge = $service->minimum_charge * $eur_usd;
+                $calculatedPrice = $calculatedPrice * $eur_usd;
+                $minimumCharge = $minimumCharge * $eur_usd;
+            }
+            if($service->currency->code == 'COP'){
+                // foreach($service->rates as $rate){
+                //     $rate->rate_value = $rate->rate_value / $trm;
+                // }
+                // $service->minimum_charge = $service->minimum_charge / $trm;
+                $calculatedPrice = $calculatedPrice / $trm;
+                $minimumCharge = $minimumCharge / $trm;
+            }
+        }
 
         return max($calculatedPrice, $minimumCharge);
     }

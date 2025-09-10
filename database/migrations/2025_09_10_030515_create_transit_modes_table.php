@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('currencies_master', function (Blueprint $table) {
+        Schema::create('transit_modes', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 3)->unique(); // E.g., 'USD', 'EUR'
-            $table->string('name'); // E.g., 'US Dollar', 'Euro'
-            $table->decimal('value', 13, 6);
+            $table->string('name')->unique();
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('currencies_master');
+        Schema::dropIfExists('transit_modes');
     }
 };

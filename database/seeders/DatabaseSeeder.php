@@ -24,5 +24,6 @@ class DatabaseSeeder extends Seeder
         $this->call(WorldSeeder::class);
         $this->call(CostItemsTableSeeder::class);
         $this->call(DhlPricingSeeder::class);
+        $this->call(TransitModeSeeder::class);
     }
 }

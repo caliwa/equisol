@@ -25,11 +25,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <flux:label>TRM</flux:label>
-                            <flux:input size="sm" type="text" id="trm" wire:model.fill="trm" class="mt-1" />
+                            <flux:input readonly size="sm" type="text" id="trm" wire:model.fill="trm" class="mt-1" />
                         </div>
                         <div>
                             <flux:label>$/€</flux:label>
-                            <flux:input size="sm" type="text" id="exchange_eur" wire:model.fill="exchange_eur" class="mt-1" />
+                            <flux:input readonly size="sm" type="text" id="eur_usd" wire:model.fill="eur_usd" class="mt-1" />
                         </div>
                     </div>
                 </flux:fieldset>
@@ -44,17 +44,17 @@
                 </flux:radio.group>
             </flux:fieldset>
 
-            <flux:button wire:click="calculateBtn" class="mt-4 w-full max-[1374px]:hidden" color="indigo" icon="calculator">
-                    Calcular
-            </flux:button>
-
-            {{-- <div>
-                <label for="transit_days" class="block text-sm font-medium text-slate-600 dark:text-slate-400">Tte & Consolid.</label>
+            <div>
+                <flux:label>Tránsito</flux:label>                
                 <flux:input.group>
-                    <flux:input size="sm" type="text" id="transit_days" wire:model.fill="transit_days" class="block w-full"/>
+                    <flux:input size="sm" type="text" id="transit_days" wire:model.fill="transit_days" variant="filled" readonly class="block w-full"/>
                     <flux:input.group.suffix>días</flux:input.group.suffix>
                 </flux:input.group>
-            </div> --}}
+            </div>
+
+            <flux:button wire:click="calculateBtn" class="mt-4 w-full max-[1374px]:hidden" color="indigo" icon="calculator">
+                Calcular
+            </flux:button>
         </div>
 
 
@@ -159,7 +159,7 @@
                     </flux:input.group>
                 <div>
                     <flux:label>Costo</flux:label>
-                    <div class="mt-1 flex items-center space-x-2">
+                    <div class="flex items-center space-x-2">
                         <flux:input size="sm" 
                         {{-- mask:dynamic="$money($input)" --}}
                         type="number"
@@ -202,16 +202,20 @@
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($origin_cost_show ?? 0, 2, '.', ',') }}</span>
                 </div>
                 <div class="flex justify-between items-baseline border-b border-dashed pb-1">
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Costos en Destino (US$)</span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($destination_costs_show ?? 0, 2, '.', ',') }}</span>
+                </div>
+                <div class="flex justify-between items-baseline border-b border-dashed pb-1">
                     <span class="text-sm text-slate-500 dark:text-slate-400">Flete (US$)</span>
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($freight_show ?? 0, 2, '.', ',') }}</span>
-                </div>
-                <div class="flex justify-between items-baseline">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">Seguro (US$)</span>
-                    <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($insurance_show ?? 0, 2, '.', ',') }}</span>
                 </div>
             </div>
 
             <div class="space-y-2 lg:col-span-1">
+                <div class="flex justify-between items-baseline border-b border-dashed pb-1">
+                    <span class="text-sm text-slate-500 dark:text-slate-400">Seguro (US$)</span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($insurance_show ?? 0, 2, '.', ',') }}</span>
+                </div>
                 <div class="flex justify-between items-baseline border-b border-dashed pb-1">
                     <span class="text-sm text-slate-500 dark:text-slate-400">CIF (US$)</span>
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($cif_show ?? 0, 2, '.', ',') }}</span>
@@ -219,10 +223,6 @@
                 <div class="flex justify-between items-baseline border-b border-dashed pb-1">
                     <span class="text-sm text-slate-500 dark:text-slate-400">Arancel (US$)</span>
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($tariff_show ?? 0, 2, '.', ',') }}</span>
-                </div>
-                <div class="flex justify-between items-baseline">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">Costos en Destino (US$)</span>
-                    <span class="font-semibold text-slate-700 dark:text-slate-200">{{ number_format($destination_costs_show ?? 0, 2, '.', ',') }}</span>
                 </div>
             </div>
             

@@ -304,12 +304,17 @@
         <flux:spacer />
 
         {{-- Mostrar/Ocultar Moneda --}}
-        @if($enableCurrencyFeature)
-            <flux:button x-show="$wire.table_columns.length > 1" @click="loadingSpinner($event);$wire.toggleCurrencyRow()">
-                <span x-show="!$wire.showCurrencyRow">Mostrar Moneda</span>
-                <span x-show="$wire.showCurrencyRow">Ocultar Moneda</span>
-            </flux:button>
-        @endif
+
+        <flux:button @click="loadingSpinner($event);$wire.openTransitModeModal()">
+            Maestro Tránsito
+        </flux:button>
+
+        {{-- @if($enableCurrencyFeature) --}}
+        <flux:button  @click="loadingSpinner($event);$wire.openCurrencyManagerModal()">
+            Maestro Moneda
+            {{-- <span x-show="!$wire.showCurrencyRow">Mostrar Moneda</span>
+            <span x-show="$wire.showCurrencyRow">Ocultar Moneda</span> --}}
+        </flux:button>
 
     </div>
 

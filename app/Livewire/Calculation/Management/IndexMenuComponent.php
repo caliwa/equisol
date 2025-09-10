@@ -74,6 +74,16 @@ class IndexMenuComponent extends Component
     //     }
     // }
 
+    public function openTransitModeModal(){
+        $mediator_dict = [];
+        $this->dispatch('mediator-mount-transit-model', $mediator_dict);
+    }
+
+    public function openCurrencyManagerModal(){
+        $mediator_dict = [];
+        $this->dispatch('mediator-mount-currency-manager', $mediator_dict);
+    }
+
     public function mount()
     {
 

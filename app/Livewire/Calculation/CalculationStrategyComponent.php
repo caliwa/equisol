@@ -170,12 +170,14 @@ class CalculationStrategyComponent extends Component
             'result' => 0,
             'conditions' => [['variable' => 'PESO', 'operator' => '>=', 'value' => 0]]
         ];
+        $this->reset(['isUpdatedExpression']);
     }
 
     public function removeRule(int $ruleIndex)
     {
         unset($this->ruleSet['rules'][$ruleIndex]);
         $this->ruleSet['rules'] = array_values($this->ruleSet['rules']);
+        $this->reset(['isUpdatedExpression']);
     }
 
     public function addCondition(int $ruleIndex)
@@ -194,6 +196,7 @@ class CalculationStrategyComponent extends Component
     public function testRules(RuleEngineService $engine)
     {
         $this->testResultRules = $engine->process($this->ruleSet, $this->testVariables);
+        $this->isUpdatedExpression = false;
     }
 
     //======================================================================

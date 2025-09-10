@@ -17,8 +17,16 @@ class FreightRatesSeeder extends Seeder
     {
         DB::transaction(function () {
             // 1. Definir monedas
-            $usd = Currency::firstOrCreate(['code' => 'USD'], ['name' => 'US Dollar']);
-            $eur = Currency::firstOrCreate(['code' => 'EUR'], ['name' => 'Euro']);
+            $usd = Currency::firstOrCreate(
+                ['code' => 'USD'],
+                ['name' => 'US Dollar', 'value' => 1.00]
+            );
+
+            // El Euro tiene un valor relativo al Dólar.
+            $eur = Currency::firstOrCreate(
+                ['code' => 'EUR'],
+                ['name' => 'Euro', 'value' => 1.07] // Ejemplo de valor
+            );
 
             // 2. Definir tipos de servicio
             $serviceTypes = [

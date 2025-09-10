@@ -18,14 +18,16 @@ class MediatorMenuComponent extends Component
         // EscapeEnableTrait,
         ProcessingEscapeTrait;
 
-    #[On('confirm-validation-modal')]
-    public function MediatorConfirmValidationModal($aux_conf_val_modal){
-        $this->dispatch('mount-confirm-validation', $aux_conf_val_modal);
+    #[On('mediator-mount-transit-model')]
+    public function MediatorTransitModel($dict){
+        $dict['zIndexModal'] = $this->convertStackCountPlusOne();
+        $this->dispatch('mount-open-transit-mode-modal', $dict);
     }
 
-    #[On('mediator-mount-dichotomic-asking-modal')]
-    public function MediatorDichotomicAskingModal($value){
-        $this->dispatch('mount-dichotomic-asking-modal', $value);
+    #[On('mediator-mount-currency-manager')]
+    public function MediatorCurrencyManager($dict){
+        $dict['zIndexModal'] = $this->convertStackCountPlusOne();
+        $this->dispatch('mount-open-currency-manager', $dict);
     }
 
     public function placeholder(){

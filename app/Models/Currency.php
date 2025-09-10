@@ -12,7 +12,7 @@ class Currency extends Model
 
     protected $table = 'currencies_master';
 
-    protected $fillable = ['code', 'name'];
+        protected $fillable = ['code', 'name', 'value'];
 
     /**
      * Una moneda puede ser usada en muchos servicios.
