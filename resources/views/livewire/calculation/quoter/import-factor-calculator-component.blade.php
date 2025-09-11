@@ -47,7 +47,7 @@
             <div>
                 <flux:label>Tránsito</flux:label>                
                 <flux:input.group>
-                    <flux:input size="sm" type="text" id="transit_days" wire:model.fill="transit_days" variant="filled" readonly class="block w-full"/>
+                    <flux:input size="sm" type="text" id="transit_days" wire:model.fill="transit_days" readonly class="block w-full"/>
                     <flux:input.group.suffix>días</flux:input.group.suffix>
                 </flux:input.group>
             </div>

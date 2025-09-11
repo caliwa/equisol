@@ -259,6 +259,8 @@
 
     <livewire:calculation.calculation-strategy-component wire:key="csc-1"/>
 
+    <livewire:overlays.observations-modal-component wire:key="omc-1" />
+
     <livewire:calculation.bills.index-bills-component wire:key="ibc-1"/>
 
 </div>

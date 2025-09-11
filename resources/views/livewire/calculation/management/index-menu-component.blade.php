@@ -401,7 +401,7 @@
                                     @if($rows_data[$rowIndex][$column['name']] == $row['tier_label'] && $row['tier_label'] === 'Mínima')
                                         <flux:badge icon="minus-circle" color="sky">Tarifa {{$rows_data[$rowIndex][$column['name']]}}</flux:badge>
                                     @elseif($rowIndex == 0)
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar la Tarifa Mínima" placement="top">
+                                        <flux:tooltip content="Oprime para configurar la Tarifa Mínima" placement="top">
                                             <flux:badge class="cursor-pointer" variant="solid" icon="currency-dollar" size="lg" color="zinc"
                                             @click="$wire.numericValueTariff = {{$rows_data[$rowIndex][$column['name']]}};
                                                     $wire.rowIndexTariff = {{ $rowIndex }};
@@ -437,7 +437,7 @@
                                             </flux:popover>
                                         </flux:dropdown>
                                         @endif
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" placement="top">
+                                        <flux:tooltip content="Oprime para configurar Tarifa" placement="top">
                                             <flux:badge class="cursor-pointer" variant="pill" icon="currency-dollar"
                                                 @click="parseAndSetTariff('{{ $rows_data[$rowIndex][$column['name']] }}',
                                                                             {{ $rowIndex }},
@@ -447,7 +447,7 @@
                                             </flux:badge>
                                         </flux:tooltip>
                                     @else
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Porcentaje" position="bottom">
+                                        <flux:tooltip content="Oprime para configurar Porcentaje" position="bottom">
                                             <flux:button icon="percent-badge"
                                                 class="w-32"
                                                 x-bind:disabled="isDisabledOpenPercentageModal"

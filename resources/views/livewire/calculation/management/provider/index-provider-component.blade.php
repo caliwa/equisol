@@ -38,22 +38,32 @@
 
         <flux:table>
             <flux:table.columns>
-                <flux:table.column>Nombre</flux:table.column>
+                <flux:table.column align="center">Nombre</flux:table.column>
                 <flux:table.column>Código</flux:table.column>
                 <flux:table.column align="center">Acciones</flux:table.column>
             </flux:table.columns>
             <flux:table.rows>
-                @forelse($providers as $provider)
-                    <flux:table.row wire:key="provider-{{ $provider->id }}">
-                        <flux:table.cell class="font-medium">
-                            {{ $provider->name }}
+                @forelse($providers as $idx => $provider)
+                    <flux:table.row wire:key="provider-{{ $provider['id'] }}">
+                        <flux:table.cell align="center" class="font-medium">
+                            <flux:tooltip content="Oprime para editar" position="bottom">
+                                <div @click="loadingSpinner($event);"
+                                    wire:click="openEditItemName('{{ $provider['name'] }}',
+                                                                        {{ $provider['id'] }},
+                                                                        {{ $idx }})"
+                                    class="cursor-pointer"
+                                >
+                                    {{ $provider['name'] }}
+                                </div>
+                            </flux:tooltip>
+
                         </flux:table.cell>
                         <flux:table.cell>
-                            <flux:badge color="secondary">{{ $provider->code }}</flux:badge>
+                            <flux:badge color="secondary">{{ $provider['code'] }}</flux:badge>
                         </flux:table.cell>
                         <flux:table.cell align="center">
                             <div class="flex justify-center gap-2">
-                                <a href="{{ route('providers.edit', $provider->id) }}">
+                                <a href="{{ route('providers.edit', $provider['id']) }}">
                                     <flux:button variant="primary" color="green" size="sm">
                                         Editar Zonas y Tarifas
                                     </flux:button>
@@ -61,9 +71,9 @@
                                 <flux:button
                                     @click="prepareDichotomic({
                                         method: 'deleteProvider',
-                                        param: {{ $provider->id }},
+                                        param: {{ $provider['id'] }},
                                         heading: 'Borrar Proveedor',
-                                        message: `¿Estás seguro de eliminar el proveedor '{{ $provider->name }}' y todos sus datos?`,
+                                        message: `¿Estás seguro de eliminar el proveedor '{{ $provider['name'] }}' y todos sus datos?`,
                                         modalDichotomicBtnText: 'Borrar'
                                     })"
                                     variant="primary" color="red" size="sm">

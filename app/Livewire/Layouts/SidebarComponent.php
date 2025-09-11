@@ -15,6 +15,14 @@ class SidebarComponent extends Component
             heading: 'Equisol',
             text: 'Has salido de la plataforma',
             variant: 'danger');
+
+
+        auth()->logout();
+
+        request()->session()->invalidate();
+
+        request()->session()->regenerateToken();
+
         $this->redirectRoute('login', navigate:true);
     }
 

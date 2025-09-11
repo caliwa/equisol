@@ -8,12 +8,12 @@ trait EscapeEnableTrait
 {
     public $escapeEnabled = true;
 
-    #[On('EscapeEnabled')]
+    #[On('escape-enabled')]
     public function EscapeEnabled(){
         $this->escapeEnabled = true;
     }
 
-    #[On('EscapeDisabled')]
+    #[On('escape-disabled')]
     public function EscapeDisabled(){
         $this->escapeEnabled = false;
     }

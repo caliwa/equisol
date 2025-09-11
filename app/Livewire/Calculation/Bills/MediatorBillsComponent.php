@@ -31,6 +31,19 @@ class MediatorBillsComponent extends Component
         $this->dispatch('set-cost-item-from-calculation', $dict);
     }
 
+    #[On('mediator-mount-observations-modal')]
+    public function ItemDataObstoRespComp($dict){
+        $dict['zIndexModal'] = $this->convertStackCountPlusOne();
+
+        $this->dispatch('mount-observations-modal', $dict);
+    }
+
+    //
+    #[On('mediator-obsto-index-bills-comp-costitems')]
+    public function ObsToIndexbillsComp($value){
+        $this->dispatch('obsto-index-bills-comp-costitems', $value);
+    }
+
     public function placeholder(){
         return view('livewire.placeholder.index-menu-placeholder');
     }

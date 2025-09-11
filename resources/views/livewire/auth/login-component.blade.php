@@ -56,16 +56,16 @@
             <flux:separator />
 
             <div class="flex flex-col gap-6">
-                <flux:input wire:model.live.debounce.200ms="user" label="Usuario" type="text" placeholder="Tu usuario" />
+                <flux:input wire:model.live.debounce.200ms="user" wire:keydown.enter="LoginButton" label="Usuario" type="text" placeholder="Tu usuario" />
 
                 <flux:field>
                     <div class="mb-3 flex justify-between">
                         <flux:label>Contraseña</flux:label>
 
-                        <flux:link href="#" variant="subtle" class="text-sm">¿Olvidaste tu contraseña?</flux:link>
+                        {{-- <flux:link href="#" variant="subtle" class="text-sm">¿Olvidaste tu contraseña?</flux:link> --}}
                     </div>
 
-                    <flux:input wire:model="password" type="password" placeholder="********" />
+                    <flux:input wire:model="password" wire:keydown.enter="LoginButton" type="password" placeholder="********" />
                     <flux:error name="password" />
                 </flux:field>
 

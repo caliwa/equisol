@@ -15,7 +15,7 @@
     @fluxAppearance
 </head>
 <body>
-    <div class="flex">
+    <div class="flex h-screen">
         <livewire:layouts.sidebar-component />
         <div class="relative w-full flex flex-col overflow-y-auto overflow-x-auto">
             <livewire:layouts.navbar-component />

@@ -28,6 +28,19 @@ class MediatorProviderComponent extends Component
         $this->provider = $provider;
     }
 
+    #[On('mediator-mount-observations-modal')]
+    public function ItemDataObstoRespComp($dict){
+        $dict['zIndexModal'] = $this->convertStackCountPlusOne();
+
+        $this->dispatch('mount-observations-modal', $dict);
+    }
+
+    //
+    #[On('mediator-obsto-index-provider-comp-provider')]
+    public function ObsToIndexProviderComp($value){
+        $this->dispatch('obsto-index-provider-comp-provider', $value);
+    }
+
     public function placeholder(){
         return view('livewire.placeholder.index-menu-placeholder');
     }

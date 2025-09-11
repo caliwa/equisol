@@ -41,7 +41,7 @@
                                 <i class="text-yellow-500 fa-solid fa-circle-question text-5xl"></i>
                             </div>
                             <button
-                            {{-- @click="openModal($event)" --}}
+                            {{-- @click="loadingSpinner($event)" --}}
                             wire:click="CloseModalClick('isVisibleDichotomicAskingModal')" 
                             x-on:click="isVisibleDichotomicAskingModal = false"
                             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white">
@@ -54,7 +54,7 @@
                             </div>
                             <p class="dark:text-white">{{$message}}</p>
                             <div class="flex justify-center gap-2">
-                                <button @click="openModal($event)" 
+                                <button @click="loadingSpinner($event)" 
                                         wire:click="DoDispatch()" 
                                         wire:loading.attr="disabled" 
                                         wire:loading.class.remove="bg-blue-900"

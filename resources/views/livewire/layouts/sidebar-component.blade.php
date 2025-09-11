@@ -2,7 +2,7 @@
     <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
         <flux:sidebar.header>
             <flux:sidebar.brand
-                href="#"
+                href="/menu-principal"
                 logo="{{asset('img/equisol-logo-1.png')}}"
                 {{-- logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png" --}}
                 name="Equisol S.A.S"
@@ -32,16 +32,15 @@
             <flux:sidebar.item wire:click="logout" icon="arrow-right-start-on-rectangle" class="text-red-500!">
                 Salir
             </flux:sidebar.item>
-            <flux:sidebar.item icon="cog-6-tooth" href="#">Ajustes</flux:sidebar.item>
+            <flux:sidebar.item icon="cog-6-tooth" href="/configuracion" wire:current="pointer-events-none!">Ajustes</flux:sidebar.item>
         </flux:sidebar.nav>
 
         <flux:dropdown position="top" align="start" class="max-lg:hidden">
-            <flux:sidebar.profile avatar="https://fluxui.dev/img/demo/user.png" name="Olivia Martin" />
+            <flux:sidebar.profile avatar="https://fluxui.dev/img/demo/user.png" name="{{auth()->user()->full_name ?? 'N/A'}}" />
 
             <flux:menu>
                 <flux:menu.radio.group>
-                    <flux:menu.radio checked>Olivia Martin</flux:menu.radio>
-                    <flux:menu.radio>Truly Delta</flux:menu.radio>
+                    <flux:menu.radio checked>{{auth()->user()->name ?? 'N/A'}}</flux:menu.radio>
                 </flux:menu.radio.group>
 {{-- 
                 <flux:menu.separator />

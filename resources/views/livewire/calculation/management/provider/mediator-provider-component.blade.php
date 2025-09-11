@@ -259,6 +259,7 @@
 
     @if(is_null($provider))
         <livewire:calculation.management.provider.index-provider-component wire:key="ipc-1"/>
+        <livewire:overlays.observations-modal-component wire:key="omc-1" />
     @else
         <livewire:calculation.management.provider.index-provider-editor-component 
         :provider="$provider"

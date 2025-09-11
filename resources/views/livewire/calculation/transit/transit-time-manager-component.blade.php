@@ -33,8 +33,8 @@
         <div class="p-6 bg-white dark:bg-gray-900 shadow-md rounded-lg">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">● Maestro de Tiempos de Tránsito</h2>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Gestiona los días de tránsito para cada origen y modo de transporte.</p>
+                    <flux:heading size="xl">● Maestro de Tiempos de Tránsito</flux:heading>
+                    <flux:description class=" mt-1">Gestiona los días de tránsito para cada origen y modo de transporte.</flux:description>
                 </div>
                 <flux:button icon="x-mark" variant="subtle"
                     wire:click="CloseModalClick('isVisibleIndexTransitTimeManagerComponent')"

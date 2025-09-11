@@ -74,10 +74,24 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                         </flux:table.cell>
                     </flux:table.row>
 
-                    @foreach($items as $item)
+                    @foreach($items as $idx => $item)
 
                         <flux:table.row class="text-center" wire:key="item-{{ $item['id'] }}">
-                            <flux:table.cell class="font-semibold">{{ $item['concept'] }}</flux:table.cell>
+                            <flux:table.cell
+                                class="font-semibold">
+                                    <flux:tooltip content="Oprime para editar" position="top">
+                                        <div @click="loadingSpinner($event);"
+                                            wire:click="openEditItemConcept('{{ $item['concept'] }}',
+                                                                             '{{ $stage }}',
+                                                                             {{ $item['id'] }}, 
+                                                                              {{ $idx }})"
+                                            class="cursor-pointer"
+                                        >
+                                            {{ $item['concept'] }}
+                                        </div>
+                                    </flux:tooltip>
+
+                            </flux:table.cell>
 
                             <flux:table.cell>
                                 <flux:select 

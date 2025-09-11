@@ -196,7 +196,7 @@ x-data="{
                             @foreach($zones as $zone)
                                 <flux:table.cell align="center">
                                     @if(isset($rates[$zone]))
-                                        <flux:tooltip flux:tooltip content="Oprime para configurar Tarifa" position="bottom">
+                                        <flux:tooltip content="Oprime para configurar Tarifa" position="bottom">
                                             <flux:button icon="swatch"
                                                 class="w-32"
                                                 placeholder="Peso"

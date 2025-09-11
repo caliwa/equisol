@@ -36,8 +36,8 @@
                 {{-- Cabecera del Modal --}}
                 <div class="flex items-start justify-between mb-6">
                     <div>
-                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">● Maestro de Monedas</h2>
-                        <p class="text-gray-500 dark:text-gray-400 mt-1">Crea, edita y elimina las monedas del sistema. (BASADAS EN EL DÓLAR)</p>
+                        <flux:heading size="xl">● Maestro de Monedas</flux:heading>
+                        <flux:description class="mt-1">Crea, edita y elimina las monedas del sistema. (BASADAS EN EL DÓLAR)</flux:description>
                     </div>
                     <flux:button icon="x-mark" variant="subtle"
                         wire:click="CloseModalClick('isVisibleCurrencyManagerComponent')"
@@ -49,9 +49,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {{-- Columna del Formulario --}}
                     <div class="md:col-span-1">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <flux:heading size="lg" class="mb-4">
                             {{ $isEditing ? 'Editar Moneda' : 'Nueva Moneda' }}
-                        </h3>
+                        </flux:heading>
                         <form wire:submit.prevent="save" class="space-y-4">
                             <flux:input
                                 label="Código (ISO 4217)"

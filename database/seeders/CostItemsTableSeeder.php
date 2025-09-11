@@ -82,7 +82,7 @@ class CostItemsTableSeeder extends Seeder
              // --- Destino ---
              ['stage' => 'Destino', 'concept' => 'Comisión SIA (agencia de aduana)', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'max(CIF * 0.0025, 348900)'])],
              ['stage' => 'Destino', 'concept' => 'Seguro', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * 0.0010'])],
-             ['stage' => 'Destino', 'concept' => 'Bodegaje', 'currency_id' => $copId, 'formula' => json_encode([
+             ['stage' => 'Destino', 'concept' => 'Bodegaje Consimex', 'currency_id' => $copId, 'formula' => json_encode([
                  'type' => 'rules', 'expression' => [
                      'default_value' => 3840000, 'rules' => [
                          ['result' => 592500, 'conditions' => [['variable' => 'PESO', 'operator' => '>=', 'value' => 1], ['variable' => 'PESO', 'operator' => '<=', 'value' => 500]]],
@@ -93,8 +93,24 @@ class CostItemsTableSeeder extends Seeder
                      ]
                  ]
              ])],
-             ['stage' => 'Destino', 'concept' => 'Manejo del Bodegaje', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 120000])],
-             ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
+            ['stage' => 'Destino', 'concept' => 'Manejo del Bodegaje', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 120000])],
+            ['stage' => 'Destino', 'concept' => 'Elaboración Declaraciones', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 219700])],
+            ['stage' => 'Destino', 'concept' => 'Elaboración DAV', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 236600])],
+            ['stage' => 'Destino', 'concept' => 'Inspección', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 167600])],
+            ['stage' => 'Destino', 'concept' => 'Siglo XXI y documental', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 69900])],
+            ['stage' => 'Destino', 'concept' => 'Gastos operativos y otros', 'currency_id' => $copId, 'formula' => json_encode(['type' => 'formula', 'expression' => 95480])],
+            ['stage' => 'Destino', 'concept' => 'Transporte Nacional', 'currency_id' => $copId, 'formula' => json_encode([
+                'type' => 'rules', 'expression' => [
+                    'default_value' => 6000000, 'rules' => [
+                        ['result' => 700000, 'conditions' => [['variable' => 'PESO', 'operator' => '>=', 'value' => 1], ['variable' => 'PESO', 'operator' => '<=', 'value' => 500]]],
+                        ['result' => 1000000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 500], ['variable' => 'PESO', 'operator' => '<=', 'value' => 1000]]],
+                        ['result' => 1800000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 1000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 4000]]],
+                        ['result' => 2200000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 4000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 8000]]],
+                        ['result' => 6000000, 'conditions' => [['variable' => 'PESO', 'operator' => '>', 'value' => 8000], ['variable' => 'PESO', 'operator' => '<=', 'value' => 32000]]],
+                    ]
+                ]
+            ])],
+            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
         ];
 
         foreach ($gastosAereo as $item) {
@@ -110,7 +126,7 @@ class CostItemsTableSeeder extends Seeder
             ['stage' => 'Destino', 'concept' => 'Pick up', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'PESO * 1.10'])],
             ['stage' => 'Destino', 'concept' => 'Firma Doc', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 12.5])],
             ['stage' => 'Destino', 'concept' => 'Entrega Destino', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'PESO * 1.10'])],
-            ['stage' => 'Destino', 'concept' => 'Manejo DHL', 'currency_id' => $usdId, 'formula' => json_encode([
+            ['stage' => 'Destino', 'concept' => 'Liberación / Manejo (DHL)', 'currency_id' => $usdId, 'formula' => json_encode([
                 'type' => 'rules', 'expression' => [
                     'default_value' => 52.14, 'rules' => [
                         ['result' => 0, 'conditions' => [['variable' => 'CIF', 'operator' => '>=', 'value' => 0], ['variable' => 'CIF', 'operator' => '<=', 'value' => 100]]],

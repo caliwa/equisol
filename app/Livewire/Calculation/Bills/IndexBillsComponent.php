@@ -29,6 +29,8 @@ class IndexBillsComponent extends Component
 
     public $costItems;
     public $currencies;
+
+    public $groupedItems = [];
     
     #[Validate('required', message: 'VALIDACIÓN: Debe seleccionar una etapa')]
     #[Validate('in:Origen,Destino', message: 'VALIDACIÓN: La etapa debe ser Origen o Destino')]
@@ -76,6 +78,7 @@ class IndexBillsComponent extends Component
 
         $this->currencies = Currency::all();
         $this->loadCostItems();
+        $this->groupedItems = collect($this->costItems)->groupBy('stage')->toArray();
     }
 
     public function saveNewCurrencyMaster($idx){
@@ -119,6 +122,7 @@ class IndexBillsComponent extends Component
             ->orderBy('concept')
             ->get()
             ->toArray();
+        $this->groupedItems = collect($this->costItems)->groupBy('stage')->toArray();
     }
 
     public function updatedCostItems($value, $key)
@@ -193,11 +197,64 @@ class IndexBillsComponent extends Component
         Flux::toast('Concepto eliminado correctamente.', 'Éxito');
     }
 
+    public function openEditItemConcept($concept, $stage, $id, $idx){
+        $sub_dict = [
+            'costItem_id' => $id,
+            'costItem_idx' => $idx,
+            'stage' => $stage,
+        ];
+    
+        $mediator_dict = [
+            'sub_dict' => $sub_dict,
+            'updated' => 'mediator-obsto-index-bills-comp-costitems',
+            'title' => 'Editar Nombre Concepto',
+            'value' => $concept,
+        ];
+
+
+        $this->dispatch('mediator-mount-observations-modal', $mediator_dict);
+    }
+
+    #[On('obsto-index-bills-comp-costitems')]
+    public function ItemDataObstoMainCompVariables($dict){
+        $itemId = $dict['costItem_id'];
+        $idx = $dict['costItem_idx'];
+        $stage = $dict['stage'];
+        $value = $dict['value'];
+        
+        $item = CostItem::find($itemId);
+        try {
+
+            Validator::make(
+                ['concept' => $value],
+                [
+                    'concept' => Rule::unique('cost_items', 'concept')
+                        ->where('service_type_id', $this->serviceTypeId)
+                        ->ignore($itemId)
+                ],
+                [
+                    'concept.unique' => 'VALIDACIÓN: Este concepto ya existe para el tipo de gasto seleccionado.',
+                ]
+            )->validate();
+
+            $item->concept = $value;
+            $item->save();
+
+            $this->groupedItems[$stage][$idx]['concept'] = $value;
+            
+            Flux::toast('Concepto actualizado correctamente.', 'Éxito');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->addError('concept', $e->getMessage()); 
+            $this->dispatch('confirm-validation-modal', $e->getMessage());
+        }
+        finally {
+            $this->dispatch('escape-enabled');
+        }
+    }
+
     public function render()
     {
-        $groupedItems = collect($this->costItems)->groupBy('stage');
-        return view('livewire.calculation.bills.index-bills-component', [
-            'groupedItems' => $groupedItems,
-        ]);
+        return view('livewire.calculation.bills.index-bills-component');
     }
 }
