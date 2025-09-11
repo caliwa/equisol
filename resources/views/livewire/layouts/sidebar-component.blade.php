@@ -36,7 +36,7 @@
         </flux:sidebar.nav>
 
         <flux:dropdown position="top" align="start" class="max-lg:hidden">
-            <flux:sidebar.profile avatar="https://fluxui.dev/img/demo/user.png" name="{{auth()->user()->full_name ?? 'N/A'}}" />
+            <flux:sidebar.profile name="{{auth()->user()->full_name ?? 'N/A'}}" />
 
             <flux:menu>
                 <flux:menu.radio.group>

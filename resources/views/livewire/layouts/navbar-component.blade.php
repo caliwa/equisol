@@ -3,7 +3,7 @@
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
         <flux:spacer />
         <flux:dropdown position="top" align="start">
-            <flux:profile avatar="https://fluxui.dev/img/demo/user.png" />
+            <flux:profile />
             <flux:menu>
                 <flux:menu.radio.group>
                     <flux:menu.radio>{{auth()->user()->name ?? 'N/A'}}</flux:menu.radio>
