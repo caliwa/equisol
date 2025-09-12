@@ -63,7 +63,7 @@ class CostItemsTableSeeder extends Seeder
                     ]
                 ]
             ])],
-            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
+            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL'])],
         ];
 
         foreach ($gastosMar as $item) {
@@ -110,7 +110,7 @@ class CostItemsTableSeeder extends Seeder
                     ]
                 ]
             ])],
-            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL_MANUAL'])],
+            ['stage' => 'Destino', 'concept' => 'Arancel', 'currency_id' => $usdId, 'formula' => json_encode(['type' => 'formula', 'expression' => 'CIF * ARANCEL'])],
         ];
 
         foreach ($gastosAereo as $item) {

@@ -114,6 +114,37 @@
                         </div>
                     </div>
 
+                    <div  wire:ignore.self
+                        href="/configuracion/auditoria"
+                        wire:navigate
+                        wire:loading.attr="disabled"
+                        class="group relative bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border border-amber-200 dark:border-amber-700/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <div class="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                            <i class="fas fa-history text-3xl text-amber-600"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="p-3 bg-amber-500 rounded-lg shadow-lg">
+                                    <flux:icon.finger-print class="text-white" />
+                                </div>
+                                <div>
+                                    <flux:heading size="xl">
+                                        Auditoría
+                                    </flux:heading>
+                                    <flux:description>
+                                        Registro de acciones
+                                    </flux:description>
+                                </div>
+                            </div>
+                            <flux:description size="lg">
+                                Ver trazabilidad de acciones.
+                            </flux:description>
+                            <flux:badge class="mt-1!" color="amber">
+                                Seguridad
+                            </flux:badge>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

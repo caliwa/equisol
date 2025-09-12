@@ -344,9 +344,14 @@ class ImportFactorCalculatorComponent extends Component
         $ratePickUpPrice = $this->calculateMasterRate('Pick Up Marítimo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
         $rateRecordPrice = $this->calculateMasterRate('Flete Marítimo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
 
+        if(is_null($ratePickUpPrice)){
+            $ratePickUpPrice = 0;
+        }
+
         if (is_null($rateRecordPrice)) {
-            $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete marítimo para el origen y peso especificados.');
-            return;
+            $rateRecordPrice = 0;
+            // $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete marítimo para el origen y peso especificados.');
+            // return;
         }
         
         $CIF = $this->cost + $rateRecordPrice + $ratePickUpPrice;
@@ -360,7 +365,7 @@ class ImportFactorCalculatorComponent extends Component
         $variables_evaluate = [
             'CIF' => $CIF,
             'PESO' => $this->weight,
-            'ARANCEL_MANUAL' => $this->tariff,
+            'ARANCEL' => $this->tariff,
         ];
 
         $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate, $this->trm, $this->eur_usd);
@@ -378,9 +383,14 @@ class ImportFactorCalculatorComponent extends Component
 
         $rateRecordPrice = $this->calculateMasterRate('Flete Aéreo', $this->origin, $chargeableWeight, $this->trm, $this->eur_usd);
 
+        if(is_null($ratePickUpPrice)){
+            $ratePickUpPrice = 0;
+        }
+
         if (is_null($rateRecordPrice)) {
-            $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete aéreo para el origen y peso especificados.');
-            return;
+            $rateRecordPrice = 0;
+            // $this->dispatch('confirm-validation-modal', 'No se encontró una tarifa de flete aéreo para el origen y peso especificados.');
+            // return;
         }
         
         $CIF = $this->cost + $rateRecordPrice + $ratePickUpPrice;
@@ -395,7 +405,7 @@ class ImportFactorCalculatorComponent extends Component
         $variables_evaluate = [
             'CIF' => $CIF,
             'PESO' => $this->weight,
-            'ARANCEL_MANUAL' => $this->tariff,
+            'ARANCEL' => $this->tariff,
         ];
 
         $cost_items_value = $this->EvaluateCostItem($CostItems, $variables_evaluate, $this->trm, $this->eur_usd);
@@ -404,8 +414,12 @@ class ImportFactorCalculatorComponent extends Component
         $this->import_factor = ($this->ddp_cost / $this->cost );
     }
 
-        public function CalculateCourrierImportFactor(){    
+    public function CalculateCourrierImportFactor(){    
         $rateRecordPrice = $this->CalculateCourierShippingCost();
+
+        if(is_null($rateRecordPrice)){
+            $rateRecordPrice = 0;
+        }
         
         $CIF = $this->cost + $rateRecordPrice;
         $this->freight_show = $rateRecordPrice;

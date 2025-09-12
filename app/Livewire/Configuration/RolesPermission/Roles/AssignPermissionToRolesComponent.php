@@ -64,9 +64,16 @@ class AssignPermissionToRolesComponent extends Component
                 $adminParts = explode('_', $adminBase);
                 $currentParts = explode('_', $currentRole);
                 
-                // Contar cuántas partes coinciden
-                $matches = count(array_intersect($adminParts, $currentParts));
-                
+                $matches = 0;
+
+                foreach ($adminParts as $admin) {
+                    foreach ($currentParts as $current) {
+                        if (strpos($current, $admin) === 0) {
+                            $matches++;
+                        }
+                    }
+                }
+
                 if ($matches > $maxMatches) {
                     $maxMatches = $matches;
                     $bestMatchAdmin = $adminRole;

@@ -67,7 +67,7 @@ class CalculationStrategyComponent extends Component
 
      // --- Propiedades para la creación de variables ---
     public string $newVariableName = '';
-    public array $availableVariables = ['PESO', 'CIF']; // Variables base
+    public array $availableVariables = ['PESO', 'CIF', 'ARANCEL']; // Variables base
 
     // --- Propiedades para el MODO FÓRMULA ---
     public string $expression = '';

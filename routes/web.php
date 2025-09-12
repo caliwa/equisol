@@ -9,6 +9,7 @@ use App\Livewire\Calculation\Bills\MediatorBillsComponent;
 use App\Livewire\Calculation\Management\MediatorMenuComponent;
 use App\Livewire\Configuration\MediatorConfigurationComponent;
 use App\Livewire\Calculation\Management\Provider\MediatorProviderComponent;
+use App\Livewire\Configuration\Audit\MediatorAuditLogComponent;
 use App\Livewire\Configuration\RolesPermission\Roles\MediatorRolesComponent;
 use App\Livewire\Configuration\User\RegisterUser\MediatorRegisterUserComponent;
 use App\Livewire\Configuration\RolesPermission\Permission\MediatorPermissionComponent;
@@ -29,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
         // // ->middleware('permission:roles');
         // // Route::get('/roles', RoleManagement::class)->name('roles.index');
         Route::get('/permisos', MediatorPermissionComponent::class)->name('permissions.index');
+        Route::get('/auditoria', MediatorAuditLogComponent::class)->name('audit.index');
     });
 
     Route::get('/test', PricingCalculator::class)->name('test'); //NO BORRAR SIRVE PARA CÁLCULO

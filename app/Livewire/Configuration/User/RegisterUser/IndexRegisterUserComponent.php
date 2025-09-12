@@ -101,7 +101,7 @@ class IndexRegisterUserComponent extends Component
     // public $users = [];
     public function mount()
     {
-        $this->availableRoles = Role::all();
+        $this->availableRoles = Role::where('name', 'not like', 'admin-%')->get();
         // $this->users = $this->getUsersProperty();
     }
 

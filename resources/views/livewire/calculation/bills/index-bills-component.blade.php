@@ -140,22 +140,20 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                                 {{-- <flux:input type="text" wire:model.blur="costItems.{{ $index }}.formula"  /> --}}
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:tooltip content="Borrar columna" position="top">
-                                    <flux:button variant="danger" size="xs"
-                                        @click="prepareDichotomic({
-                                            method: 'removeItem',
-                                            param: {{ $item['id'] }},
-                                            heading: 'Borrar Concepto',
-                                            message: `¿Estás seguro de eliminar el concepto '{{ $item['concept'] }}'?`,
-                                            modalDichotomicBtnText: 'Borrar'
-                                        })"
-                                        class="bg-red-500! flex-shrink-0"
-                                        icon:variant="outline"
-                                    
-                                    >
-                                    Eliminar
-                                    </flux:button>
-                                </flux:tooltip>
+                                <flux:button variant="danger" size="xs"
+                                    @click="prepareDichotomic({
+                                        method: 'removeItem',
+                                        param: {{ $item['id'] }},
+                                        heading: 'Borrar Concepto',
+                                        message: `¿Estás seguro de eliminar el concepto '{{ $item['concept'] }}'?`,
+                                        modalDichotomicBtnText: 'Borrar'
+                                    })"
+                                    class="bg-red-500! flex-shrink-0"
+                                    icon:variant="outline"
+                                
+                                >
+                                Eliminar
+                                </flux:button>
 
                             </flux:table.cell>
                         </flux:table.row>

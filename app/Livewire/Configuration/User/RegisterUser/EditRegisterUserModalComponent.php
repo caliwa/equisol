@@ -91,7 +91,7 @@ class EditRegisterUserModalComponent extends Component
             // Cargar roles y cargos disponibles
         }
 
-        $this->availableRoles = Role::all();
+        $this->availableRoles = Role::where('name', 'not like', 'admin-%')->get();
         $this->isVisibleEditRegisterUserModal = true;
         $this->dispatch('escape-enabled');
     }
