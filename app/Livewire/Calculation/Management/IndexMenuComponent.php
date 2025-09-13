@@ -32,6 +32,7 @@ class IndexMenuComponent extends Component
 
     public array $table_columns = [];
     public array $rows_data = [];
+    public array $initial_rows_data = []; // <-- Propiedad para estado inicial
     public array $service_currencies = [];
     public string $type_service = 'pu_aereo';
     public string $serviceTypeName = 'Pick Up Aéreo';
@@ -152,45 +153,61 @@ class IndexMenuComponent extends Component
             }
             $this->rows_data[] = $currentRow;
         }
+
+        // Al final, guarda el estado inicial
+        $this->initial_rows_data = $this->rows_data;
     }
 
-    public function saveNewCurrencyMaster(){
+    public function saveNewCurrencyMaster()
+    {
         DB::transaction(function () {
             if ($this->enableCurrencyFeature) {
                 foreach ($this->service_currencies as $serviceId => $currencyId) {
-                    Service::where('id', $serviceId)->update(['currency_id' => $currencyId ?: null]);
+                    $service = Service::find($serviceId);
+                    
+                    if ($service && $service->currency_id != ($currencyId ?: null)) {
+                        $service->currency_id = $currencyId ?: null;
+                        $service->save();
+                    }
                 }
             }
         });
+
         Flux::toast('Divisa cambiada éxitosamente.');
         $this->loadRateTableData();
         $this->dispatch('escape-enabled');
     }
 
+    /**
+     * Método de guardado general optimizado.
+     * Solo guarda las celdas que realmente han cambiado.
+     */
     public function save()
     {
         DB::transaction(function () {
-            // Guardar nombres de países
-            foreach ($this->table_columns as $column) {
-                if (isset($column['origin_id'])) {
-                    Origin::where('id', $column['origin_id'])->update(['name' => $column['label']]);
-                }
-            }
-
-            // Guardar tarifas y mínimos
-            foreach ($this->rows_data as $row) {
+            // Guardar tarifas y mínimos (SOLO LOS CAMBIOS)
+            foreach ($this->rows_data as $rowIndex => $row) {
                 $tierId = $row['tier_id'];
                 $tierLabel = $row['tier_label'];
+
+                // 1. Guardar Cargo Mínimo (si cambió)
                 if (is_null($tierId) && $tierLabel === 'Mínima') {
                     foreach ($row as $key => $value) {
-                        if (str_starts_with($key, 'service_')) {
-                            Service::where('id', str_replace('service_', '', $key))->update(['minimum_charge' => $value]);
+                        if (str_starts_with($key, 'service_') && $value != $this->initial_rows_data[$rowIndex][$key]) {
+                            Service::where('id', str_replace('service_', '', $key))
+                                   ->update(['minimum_charge' => $value]);
                         }
                     }
-                } elseif (!is_null($tierId)) {
-                    WeightTier::where('id', $tierId)->update(['label' => $tierLabel,'min_weight' => 0,'display_order' => 9999]);
+                } 
+                // 2. Guardar Tarifas por Nivel (si cambiaron)
+                elseif (!is_null($tierId)) {
+                    // Actualiza el label del nivel si cambió (opcional)
+                    if ($tierLabel != $this->initial_rows_data[$rowIndex]['tier_label']) {
+                        WeightTier::where('id', $tierId)->update(['label' => $tierLabel]);
+                    }
+                    
                     foreach ($row as $key => $value) {
-                        if (str_starts_with($key, 'service_')) {
+                        if (str_starts_with($key, 'service_') && $value != $this->initial_rows_data[$rowIndex][$key]) {
                             Rate::updateOrCreate(
                                 ['service_id' => str_replace('service_', '', $key), 'weight_tier_id' => $tierId],
                                 ['rate_value' => $value]
@@ -200,15 +217,17 @@ class IndexMenuComponent extends Component
                 }
             }
         });
+
         Flux::toast('Datos guardados correctamente.');
         $this->resequenceDisplayAndWeight();
-        $this->loadRateTableData();
+        $this->loadRateTableData(); // Esto recarga el estado inicial
         $this->dispatch('escape-enabled');
     }
 
     #[On('editCountry')]
     public function editCountry($dict)
     {
+        // ... (Este método ya estaba bien optimizado, no requiere cambios)
         $dict = (array)json_decode($dict);
         $country_name = $dict['country_name'] ?? null;
         $colIndex = $dict['colIndex'] ?? null;
@@ -278,11 +297,11 @@ class IndexMenuComponent extends Component
         return $success;
     }
 
-    public function addRowPercentage(){
-        $variables_to_validate = [
-            'numericValueTariff',
-        ];
-
+    /**
+     */
+    public function addRowPercentage()
+    {
+        $variables_to_validate = [ 'numericValueTariff' ];
         try {
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -296,20 +315,34 @@ class IndexMenuComponent extends Component
 
         $formattedValue = $this->numericValueTariff + 0;
 
-        if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+        if (!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+            $serviceId = (int) str_replace('service_', '', $this->columnNameTariff);
+            $tierId = $this->rows_data[$this->rowIndexTariff]['tier_id'];
+
+            if ($formattedValue == $this->initial_rows_data[$this->rowIndexTariff][$this->columnNameTariff]) {
+                Flux::modal('percentage-modal')->close();
+                Flux::toast('No se realizaron cambios.', 'Información');
+                return;
+            }
+
+            Rate::updateOrCreate(
+                ['service_id' => $serviceId, 'weight_tier_id' => $tierId],
+                ['rate_value' => $formattedValue]
+            );
+            
             $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
-            $this->save();
+            $this->initial_rows_data = $this->rows_data;
+
             Flux::modal('percentage-modal')->close();
             Flux::toast('Porcentaje modificado correctamente.', 'Éxito');
-            return;
         }
     }
 
-    public function addRowTariff(){
-        $variables_to_validate = [
-            'numericValueTariff',
-        ];
-
+    /**
+     */
+    public function addRowTariff()
+    {
+        $variables_to_validate = [ 'numericValueTariff' ];
         try {
             $this->validateLivewireInput($variables_to_validate);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -323,12 +356,25 @@ class IndexMenuComponent extends Component
 
         $formattedValue = $this->numericValueTariff + 0;
 
-        if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
-            $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
-            $this->save();
+        if (!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
+            $serviceId = (int) str_replace('service_', '', $this->columnNameTariff);
+
+            $service = Service::find($serviceId);
+
+            if ($service && $service->minimum_charge != $formattedValue) {
+                
+                $service->minimum_charge = $formattedValue;
+                $service->save();
+
+                $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
+                $this->initial_rows_data = $this->rows_data;
+
+                Flux::toast('Tarifa Mínima modificada correctamente.', 'Éxito');
+            } else {
+                Flux::toast('No se realizaron cambios.', 'Información');
+            }
+
             Flux::modal('minimum-tariff-modal')->close();
-            Flux::toast('Tarifa agregada correctamente.', 'Éxito');
-            return;
         }
     }
 
@@ -421,10 +467,19 @@ class IndexMenuComponent extends Component
             return;
         }
         
+        // --- Lógica para editar un label existente ---
         if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
-            $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $label;
-            $this->save();
+            $tierId = $this->rows_data[$this->rowIndexTariff]['tier_id'];
+            if ($tierId) {
+                $tier = WeightTier::find($tierId);
+                if ($tier) {
+                    $tier->label = $label;
+                    $tier->save(); // save() para disparar observer
+                    $this->resequenceDisplayAndWeight();
+                }
+            }
             Flux::modal('operand-modal')->close();
+            $this->loadRateTableData();
             return;
         }
 
@@ -527,4 +582,3 @@ class IndexMenuComponent extends Component
         return view('livewire.calculation.management.index-menu-component');
     }
 }
-
