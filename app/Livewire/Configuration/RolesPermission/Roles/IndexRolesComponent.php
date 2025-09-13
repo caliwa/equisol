@@ -7,8 +7,10 @@ use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use Flux\Flux;
 use Livewire\Attributes\Isolate;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+// use Spatie\Permission\Models\Role;
+// use Spatie\Permission\Models\Permission;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Livewire\Traits\AdapterLivewireExceptionTrait;
 
 #[Isolate]

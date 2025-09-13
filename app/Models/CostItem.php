@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CostItem extends Model
+use App\Contracts\AuditableInterface;
+use App\Observers\AuditObserver;
+use App\Traits\AuditableTrait;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy(AuditObserver::class)]
+class CostItem extends Model implements AuditableInterface
 {
-    use HasFactory;
+    use HasFactory, AuditableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +29,22 @@ class CostItem extends Model
         'currency_id',
         'formula_notes',
         'formula',
+    ];
+
+    protected $auditableFields = [
+        'service_type_id',
+        'stage',
+        'concept',
+        'fixed_amount',
+        'currency_id',
+        'formula_notes',
+        'formula',
+    ];
+
+    protected array $auditableEvents = [
+        'created',
+        'updated',
+        'deleted'
     ];
 
     protected $casts = [

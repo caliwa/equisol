@@ -73,7 +73,7 @@ class CalculationStrategyComponent extends Component
     public string $expression = '';
     public bool $isUpdatedExpression = true;
 
-    public array $testVariables = ['PESO' => 100, 'CIF' => 5000, 'OTRA_VARIABLE' => 2000];
+    public array $testVariables = ['PESO' => 100, 'CIF' => 5000, 'ARANCEL' => 19];
     public $testResultFormula = null;
     public ?string $testError = null;
 

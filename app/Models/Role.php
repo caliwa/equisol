@@ -3,23 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role as SpatieRole;
+use App\Contracts\AuditableInterface;
+use App\Observers\AuditObserver;
+use App\Traits\AuditableTrait;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-class Role extends Model
+#[ObservedBy(AuditObserver::class)]
+class Role extends SpatieRole implements AuditableInterface
 {
-    protected $guard_name = 'web'; // O 'api' según corresponda
-    protected  $fillable = ['name','guard_name', 'description'];
-    public function permissions()
-    {
-        return $this->belongsToMany(Permission::class, 'role_has_permissions', 'role_id', 'permission_id'); // Utiliza el nombre de la tabla y las columnas personalizadas
-    }
+    use HasFactory, AuditableTrait;
+
+    protected $fillable = ['name', 'guard_name', 'description'];
+    protected $auditableFields = ['name', 'guard_name', 'description'];
+
+    protected array $auditableEvents = [
+        'created',
+        'updated',
+        'deleted'
+    ];
     
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'user_roles'); // Utiliza el nombre de la tabla personalizado
-    }
-    
-    
-    
-}    
-    
+}

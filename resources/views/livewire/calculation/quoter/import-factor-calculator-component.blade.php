@@ -141,7 +141,7 @@
                         <flux:input size="sm" variant="filled" 
                         readonly wire:model.fill="total_volume" type="text" id="total_volume"></flux:input>
                     </div>
-                    <flux:description>Solo ingrese números enteros para evitar errores.</flux:description>
+                    <flux:description>Solo ingrese números, no caracteres.</flux:description>
                 </div>
             </flux:fieldset>
 

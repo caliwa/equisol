@@ -9,10 +9,16 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+use App\Contracts\AuditableInterface;
+use App\Observers\AuditObserver;
+use App\Traits\AuditableTrait;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy(AuditObserver::class)]
+class User extends Authenticatable implements AuditableInterface
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasRoles, HasFactory, Notifiable;
+    use HasApiTokens, HasRoles, HasFactory, Notifiable, AuditableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +31,20 @@ class User extends Authenticatable
         'email',
         'password',
         'cedula',
+    ];
+
+    protected $auditableFields = [
+        'name',
+        'full_name',
+        'email',
+        'password',
+        'cedula',
+    ];
+
+    protected array $auditableEvents = [
+        'created',
+        'updated',
+        'deleted'
     ];
 
     /**

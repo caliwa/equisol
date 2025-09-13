@@ -7,8 +7,10 @@ use Livewire\Attributes\On;
 use Flux\Flux;
 use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Validate;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+// use Spatie\Permission\Models\Role;
+// use Spatie\Permission\Models\Permission;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Livewire\Traits\CloseModalClickTrait;
 use App\Livewire\Traits\AdapterLivewireExceptionTrait;
 

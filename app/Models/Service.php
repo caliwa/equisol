@@ -7,15 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Service extends Model
+use App\Contracts\AuditableInterface;
+use App\Observers\AuditObserver;
+use App\Traits\AuditableTrait;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy(AuditObserver::class)]
+class Service extends Model implements AuditableInterface
 {
-    use HasFactory;
+    use HasFactory, AuditableTrait;
+
     protected $fillable = [
         'origin_id',
         'service_type_id',
         'currency_id',
         'minimum_charge'
     ];
+
+    protected $auditableFields = [
+        'origin_id',
+        'service_type_id',
+        'currency_id',
+        'minimum_charge'
+    ];
+
+    protected array $auditableEvents = [
+        'created',
+        'updated',
+        'deleted'
+    ];
+
 
     /**
      * Un servicio pertenece a un origen.

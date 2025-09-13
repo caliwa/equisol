@@ -36,8 +36,8 @@
                 {{-- Cabecera del Modal --}}
                 <div class="flex items-start justify-between mb-6">
                     <div>
-                        <flux:heading size="xl">● Maestro de Monedas</flux:heading>
-                        <flux:description class="mt-1">Crea, edita y elimina las monedas del sistema. (BASADAS EN EL DÓLAR)</flux:description>
+                        <flux:heading size="xl">Maestro de Monedas</flux:heading>
+                        <flux:description class="mt-1">Crea, edita y elimina las monedas del sistema.</flux:description>
                     </div>
                     <flux:button icon="x-mark" variant="subtle"
                         wire:click="CloseModalClick('isVisibleCurrencyManagerComponent')"
@@ -69,7 +69,7 @@
                             <flux:input
                                 type="number"
                                 step="any"
-                                label="Valor (referencia USD)"
+                                label="Valor"
                                 wire:model="value"
                                 placeholder="Ej: 1.07"
                                 :error="$errors->first('value')"
@@ -91,22 +91,27 @@
                     {{-- Columna de la Tabla --}}
                     <div class="md:col-span-2">
                          <div class="overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 max-h-96">
-                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
-                                    <tr>
-                                        <th scope="col" class="px-4 py-3">Código</th>
-                                        <th scope="col" class="px-4 py-3">Nombre</th>
-                                        <th scope="col" class="px-4 py-3">Valor</th>
-                                        <th scope="col" class="px-4 py-3 text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                            <flux:table>
+                                <flux:table.columns sticky>
+                                    <flux:table.column align="center">Código</flux:table.column>
+                                    <flux:table.column align="center">Nombre</flux:table.column>
+                                    <flux:table.column align="center">Valor</flux:table.column>
+                                    <flux:table.column align="center">Acciones</flux:table.column>
+                                </flux:table.columns>
+
+                                <flux:table.rows>
                                     @forelse($currencies as $currency)
-                                        <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $currency->code }}</td>
-                                            <td class="px-4 py-3">{{ $currency->name }}</td>
-                                            <td class="px-4 py-3">{{ number_format($currency->value, 4) }}</td>
-                                            <td class="px-4 py-3 text-center">
+                                        <flux:table.row wire:key="currency-row-{{ $currency->id }}">
+                                            <flux:table.cell align="center" class="font-medium text-gray-900 dark:text-white">
+                                                {{ $currency->code }}
+                                            </flux:table.cell>
+                                            <flux:table.cell align="center">
+                                                {{ $currency->name }}
+                                            </flux:table.cell>
+                                            <flux:table.cell align="center">
+                                                {{ number_format($currency->value, 4) }}
+                                            </flux:table.cell>
+                                            <flux:table.cell align="center">
                                                 <div class="flex items-center justify-center gap-2">
                                                     <flux:button size="sm" icon="pencil-square" wire:click="edit({{ $currency->id }})" />
                                                     <flux:button size="sm" icon="trash" color="red"
@@ -119,17 +124,17 @@
                                                         })"
                                                     />
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </flux:table.cell>
+                                        </flux:table.row>
                                     @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center py-10 text-gray-500">
+                                        <flux:table.row>
+                                            <flux:table.cell colspan="4" class="text-center py-10 text-gray-500">
                                                 <p>No hay monedas registradas.</p>
-                                            </td>
-                                        </tr>
+                                            </flux:table.cell>
+                                        </flux:table.row>
                                     @endforelse
-                                </tbody>
-                            </table>
+                                </flux:table.rows>
+                            </flux:table>
                          </div>
                     </div>
                 </div>

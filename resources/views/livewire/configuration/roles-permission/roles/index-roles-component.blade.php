@@ -6,11 +6,10 @@
         <flux:breadcrumbs.item>Roles</flux:breadcrumbs.item>
     </flux:breadcrumbs>
 
-    <!-- Header -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="flex justify-between items-center">
             <flux:heading size="xl">Gestión de Roles</flux:heading>
-            <flux:button 
+            <flux:button
                 @click="loadingSpinner($event)"
                 wire:click="OpenCreateRolesModal"
                 icon="plus"
@@ -21,30 +20,27 @@
             </flux:button>
         </div>
 
-        <!-- Search -->
         <div class="mt-4">
             <flux:input wire:model.live="search" icon="magnifying-glass" placeholder="Buscar roles..." />
         </div>
 
-        <!-- Roles Table -->
         <div class="mt-6 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permisos</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>ID</flux:table.column>
+                    <flux:table.column>Nombre</flux:table.column>
+                    <flux:table.column>Descripción</flux:table.column>
+                    <flux:table.column>Permisos</flux:table.column>
+                    <flux:table.column>Acciones</flux:table.column>
+                </flux:table.columns>
+
+                <flux:table.rows>
                     @forelse($roles as $role)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $role->id }}</td>
-                            <td class="px-6 py-4">{{ $role->name }}</td>
-                            <td class="px-6 py-4">{{ $role->description }}</td>
-                            <td class="px-6 py-4">
+                        <flux:table.row wire:key="role-row-{{ $role->id }}">
+                            <flux:table.cell>{{ $role->id }}</flux:table.cell>
+                            <flux:table.cell>{{ $role->name }}</flux:table.cell>
+                            <flux:table.cell>{{ $role->description }}</flux:table.cell>
+                            <flux:table.cell>
                                 <div class="flex flex-wrap gap-2">
                                     @forelse($role->permissions as $permission)
                                         <flux:badge size="sm" variant="solid" color="blue"> {{ $permission->name }}</flux:badge>
@@ -52,22 +48,22 @@
                                         <flux:badge size="sm" variant="pill" color="zinc">No posee permiso/s</flux:badge>
                                     @endforelse
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 <div class="flex items-center gap-2">
                                     <flux:tooltip content="Asignar Permisos" position="top">
-                                        <flux:button 
+                                        <flux:button
                                             @click="loadingSpinner($event)"
                                             wire:click="OpenAssignPermissionToRolesModal({{ $role->id }})"
                                             icon:trailing="key"
                                             icon:variant="outline"
-                                            class="text-green-600!" 
+                                            class="text-green-600!"
                                         >
                                         </flux:button>
                                     </flux:tooltip>
-                                    
+
                                     <flux:tooltip content="Editar Rol" position="top">
-                                        <flux:button 
+                                        <flux:button
                                             @click="loadingSpinner($event)"
                                             wire:click="OpenEditRolesModal({{ $role->id }})"
                                             icon:trailing="pencil-square"
@@ -81,7 +77,7 @@
                                         <flux:tooltip content="Duplicar Rol" position="top">
                                             <flux:button
                                                 @click="loadingSpinner($event)"
-                                                wire:click="DuplicatRol({{ $role->id }})" 
+                                                wire:click="DuplicatRol({{ $role->id }})"
                                                 icon:trailing="document-duplicate"
                                                 icon:variant="outline"
                                                 class="text-purple-600!"
@@ -91,7 +87,7 @@
                                     @endunless
 
                                     <flux:tooltip content="Eliminar Rol" position="top">
-                                        <flux:button 
+                                        <flux:button
                                             @click="prepareDichotomic({
                                                 method: 'DeleteRol',
                                                 param: {{ $role->id }},
@@ -107,22 +103,21 @@
                                     </flux:tooltip>
 
                                 </div>
-                            </td>
-                        </tr>
+                            </flux:table.cell>
+                        </flux:table.row>
                     @empty
-                        <tr class="hover:bg-gray-50">
-                            <td colspan="5" >
-                                <flux:description class="text-center">
+                        <flux:table.row>
+                            <flux:table.cell colspan="5">
+                                <flux:description class="text-center py-4">
                                     No hay roles registrados.
                                 </flux:description>
-                            </td>
-                        </tr>
+                            </flux:table.cell>
+                        </flux:table.row>
                     @endforelse
-                </tbody>
-            </table>
+                </flux:table.rows>
+            </flux:table>
         </div>
 
-        <!-- Pagination -->
         <div class="mt-4">
             {{ $roles->links() }}
         </div>

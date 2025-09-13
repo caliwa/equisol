@@ -139,14 +139,14 @@ class CurrencyManagerComponent extends Component
 
             $this->dispatch('confirm-validation-modal', $msg);
             $this->dispatch('escape-enabled');
-            Flux::modal('dichotomic-modal')->close();
 
         } else {
-            // 5. Si no está en uso, proceder con la eliminación.
             $currency->delete();
             $this->loadCurrencies();
             Flux::toast('¡Moneda eliminada con éxito!', 'Éxito');
         }
+            Flux::modal('dichotomic-modal')->close();
+
     }
 
 

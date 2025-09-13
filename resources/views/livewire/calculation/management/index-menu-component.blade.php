@@ -153,7 +153,7 @@
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Tarifa</flux:heading>
-                <flux:text class="mt-2">Creación de fila para representar una nueva tarifa</flux:text>
+                <flux:text class="mt-2">Fila para representación de una nueva tarifa</flux:text>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -213,7 +213,7 @@
                     </template>
 
                     <template x-if="!isLoadingTariffFlyoutModal">
-                        <span>Crear tarifa</span>
+                        <span>Guardar tarifa</span>
                     </template>
                 </flux:button>
             </div>

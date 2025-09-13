@@ -6,11 +6,12 @@ use Flux\Flux;
 use App\Models\Rate;
 use App\Models\Origin;
 use App\Models\Service;
-use Livewire\Component;
-use Nnjeim\World\World;
 use App\Models\Currency;
 use App\Models\WeightTier;
 use App\Models\ServiceType;
+
+use Livewire\Component;
+use Nnjeim\World\World;
 use Livewire\Attributes\On;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Isolate;
@@ -47,32 +48,14 @@ class IndexMenuComponent extends Component
     public $rowIndexTariff;
     public $columnNameTariff;
 
-    // #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un valor numérico.')]
-    // #[Validate('numeric', message: 'VALIDACIÓN: El valor debe ser un número.')]
-    // #[Validate('min:0.01', message: 'VALIDACIÓN: El valor debe ser mayor a 0.')]
-    // #[Validate('max:999999.99', message: 'VALIDACIÓN: El valor no puede ser mayor a 999999.99.')]
-    // public float $numericMinimumTariffValue;
-
     public bool $enableCurrencyFeature = true;
     public bool $showCurrencyRow = true;
     public Collection $currencies;
 
     #[Validate('required', message: 'VALIDACIÓN: Debe ingresar un nombre para el país.')]
-    // #[Validate('min:3', message: 'El nombre del país debe tener al menos 3 caracteres.')]
-    // #[Validate('unique:origins,name', message: 'El país ya existe.')]
     public string $newColumnName = '';
 
     public $countries = [];
-
-    // public $showPercentageModal = false;
-
-    // public function updatedShowPercentageModal($value){
-    //     if ($value) {
-    //         $this->dispatch('x-block-open-percentage-modal');
-    //     } else {
-    //         $this->dispatch('x-unblock-open-percentage-modal');
-    //     }
-    // }
 
     public function openTransitModeModal(){
         $mediator_dict = [];
@@ -86,20 +69,17 @@ class IndexMenuComponent extends Component
 
     public function mount()
     {
-
         $action = World::setLocale('es')->countries(['fields' => 'iso2']);
 
         if ($action->success) {
             $this->countries = $action->data;
         }
 
-        // Solo cargamos las monedas si la función está activada para esta tabla.
         if ($this->enableCurrencyFeature) {
             $this->currencies = Currency::all();
         }
         $this->SelectMasterTypeService($this->serviceTypeName, true);
         $this->loadRateTableData();
-
     }
 
     function SelectMasterTypeService($serviceTypeName, $firstTime = null)
@@ -134,7 +114,6 @@ class IndexMenuComponent extends Component
             ->orderBy('origins.name')
             ->select('services.*');
 
-        // Si la función de moneda está activada, también cargamos esa relación.
         if ($this->enableCurrencyFeature) {
             $query->with('currency');
         }
@@ -173,8 +152,6 @@ class IndexMenuComponent extends Component
             }
             $this->rows_data[] = $currentRow;
         }
-        // dd($this->table_columns );
-        // dd([$this->rows_data, $this->table_columns]);
     }
 
     public function saveNewCurrencyMaster(){
@@ -211,7 +188,7 @@ class IndexMenuComponent extends Component
                         }
                     }
                 } elseif (!is_null($tierId)) {
-                    WeightTier::where('id', $tierId)->update(['label' => $tierLabel]);
+                    WeightTier::where('id', $tierId)->update(['label' => $tierLabel,'min_weight' => 0,'display_order' => 9999]);
                     foreach ($row as $key => $value) {
                         if (str_starts_with($key, 'service_')) {
                             Rate::updateOrCreate(
@@ -224,6 +201,7 @@ class IndexMenuComponent extends Component
             }
         });
         Flux::toast('Datos guardados correctamente.');
+        $this->resequenceDisplayAndWeight();
         $this->loadRateTableData();
         $this->dispatch('escape-enabled');
     }
@@ -267,7 +245,6 @@ class IndexMenuComponent extends Component
                             text: 'El cambio crearía '.$conflictingServices.' combinación(es) duplicada(s)',
                             heading: 'Error de duplicado'
                         );
-
                         return false;
                     }
                 }
@@ -280,7 +257,6 @@ class IndexMenuComponent extends Component
                             ->update(['name' => $column['label']]);
                     }
                 }
-
                 return true;
             });
         } catch (\Exception $e) {
@@ -298,7 +274,6 @@ class IndexMenuComponent extends Component
             }
             Flux::modal('dichotomic-modal')->close();
         }
-
         return $success;
     }
 
@@ -321,7 +296,6 @@ class IndexMenuComponent extends Component
         $formattedValue = $this->numericValueTariff + 0;
 
         if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
-
             $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $formattedValue;
             $this->save();
             Flux::modal('percentage-modal')->close();
@@ -357,8 +331,53 @@ class IndexMenuComponent extends Component
         }
     }
 
+    private function _getNumericValueFromLabel($label)
+    {
+        preg_match('/[<>=!]+(\d+\.?\d*)/', $label, $matches);
+        return isset($matches[1]) ? (float) $matches[1] : 0;
+    }
+
+    private function resequenceDisplayAndWeight()
+    {
+        $tiersToResequence = WeightTier::where('service_type_id', $this->serviceTypeId)
+            ->get()
+            ->sortBy(function($tier) {
+                return $this->_getNumericValueFromLabel($tier->label);
+            })
+            ->values();
+
+        if ($tiersToResequence->isEmpty()) {
+            return;
+        }
+        
+        $table = (new WeightTier())->getTable();
+        $ids = $tiersToResequence->pluck('id');
+        $displayOrderCase = 'CASE id ';
+        $minWeightCase = 'CASE id ';
+        $previousTierValue = 0;
+
+        foreach ($tiersToResequence as $index => $tier) {
+            $currentOrder = $index + 1;
+            $displayOrderCase .= "WHEN {$tier->id} THEN {$currentOrder} ";
+            $minWeightCase    .= "WHEN {$tier->id} THEN {$previousTierValue} ";
+            
+            $previousTierValue = $this->_getNumericValueFromLabel($tier->label);
+        }
+        
+        $displayOrderCase .= 'END';
+        $minWeightCase    .= 'END';
+
+        DB::table($table)
+            ->whereIn('id', $ids)
+            ->update([
+                'display_order' => DB::raw($displayOrderCase),
+                'min_weight'    => DB::raw($minWeightCase),
+            ]);
+    }
+
     public function addRow()
     {
+        // --- 1. Validación de Entrada ---
         $variables_to_validate = [
             'selectedOperator',
             'numericValueTariff',
@@ -375,7 +394,6 @@ class IndexMenuComponent extends Component
         }
 
         $formattedValue = $this->numericValueTariff + 0;
-
         $label = $this->selectedOperator . $formattedValue;
 
         if ((is_numeric($formattedValue) && $formattedValue <= 0) && ($this->selectedOperator == '<' || $this->selectedOperator == '<=')) {
@@ -384,6 +402,7 @@ class IndexMenuComponent extends Component
             return;
         }
 
+        // --- 2. Validación de Unicidad ---
         try {
             Validator::make(
                 ['label' => $label, 'service_type_id' => $this->serviceTypeId],
@@ -393,16 +412,14 @@ class IndexMenuComponent extends Component
                             ->where(fn ($query) => $query->where('service_type_id', $this->serviceTypeId))
                     ]
                 ],
-                [
-                    'label.unique' => 'La tarifa "' . $label . '" ya existe para este maestro.'
-                ]
+                ['label.unique' => 'La tarifa "' . $label . '" ya existe para este maestro.']
             )->validate();
         } catch (\Exception $e) {
             $this->dispatch('escape-enabled');
             $this->addError('numericValueTariff', $e->getMessage());
             return;
         }
-
+        
         if(!is_null($this->rowIndexTariff) && !is_null($this->columnNameTariff)) {
             $this->rows_data[$this->rowIndexTariff][$this->columnNameTariff] = $label;
             $this->save();
@@ -410,17 +427,20 @@ class IndexMenuComponent extends Component
             return;
         }
 
-        $lastTier = WeightTier::orderBy('display_order', 'desc')->first();
-        WeightTier::create([
-            'label' => $label,
-            'min_weight' => ($lastTier->max_weight ?? -1) + 1,
-            // 'max_weight' => ($lastTier->max_weight ?? 0) + 1000,
-            'display_order' => ($lastTier->display_order ?? 0) + 1,
-            'service_type_id' => $this->serviceTypeId, // <--- AGREGAR ESTO
-        ]);
-        Flux::modal('operand-modal')->close();
-        Flux::toast('Tarifa agregada correctamente.', 'Éxito');
+        // --- 3. Lógica para agregar una NUEVA fila y re-ordenar todo ---
+        DB::transaction(function () use ($label) {
+            WeightTier::create([
+                'label' => $label,
+                'min_weight' => 0,
+                'display_order' => 9999, // Valor temporal alto
+                'service_type_id' => $this->serviceTypeId,
+            ]);
 
+            $this->resequenceDisplayAndWeight();
+        });
+
+        Flux::modal('operand-modal')->close();
+        Flux::toast('Tarifa agregada y ordenada correctamente.', 'Éxito');
         $this->loadRateTableData();
     }
 
@@ -495,14 +515,15 @@ class IndexMenuComponent extends Component
     public function removeRow($tierId)
     {
         WeightTier::destroy($tierId);
+        $this->resequenceDisplayAndWeight();
         Flux::toast('Tarifa eliminada correctamente.', 'Éxito');
         Flux::modal('dichotomic-modal')->close();
         $this->loadRateTableData();
     }
-
 
     public function render()
     {
         return view('livewire.calculation.management.index-menu-component');
     }
 }
+
