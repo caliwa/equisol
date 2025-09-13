@@ -251,10 +251,11 @@ class IndexMenuComponent extends Component
 
                 $this->table_columns[$colIndex]['label'] = $country_name;
 
-                foreach ($this->table_columns as $column) {
-                    if (isset($column['origin_id'])) {
-                        Origin::where('id', $column['origin_id'])
-                            ->update(['name' => $column['label']]);
+                if ($origin_id) {
+                    $originToUpdate = Origin::find($origin_id);
+                    if ($originToUpdate) {
+                        $originToUpdate->name = $country_name;
+                        $originToUpdate->save();
                     }
                 }
                 return true;

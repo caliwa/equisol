@@ -2,15 +2,16 @@
 
 namespace App\Livewire\Configuration\RolesPermission\Roles;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
 use Flux\Flux;
-use Livewire\Attributes\Isolate;
-use Livewire\Attributes\Validate;
+use App\Models\Role;
+use Livewire\Component;
+use App\Models\Permission;
+use Livewire\Attributes\On;
 // use Spatie\Permission\Models\Role;
 // use Spatie\Permission\Models\Permission;
-use App\Models\Role;
-use App\Models\Permission;
+use Livewire\Attributes\Isolate;
+use Livewire\Attributes\Validate;
+use Illuminate\Support\Facades\DB;
 use App\Livewire\Traits\CloseModalClickTrait;
 use App\Livewire\Traits\AdapterLivewireExceptionTrait;
 
@@ -34,6 +35,7 @@ class AssignPermissionToRolesComponent extends Component
     public $AdminGlobal;
 
     public $selectedPermissions = [];
+    public $initialPermissions = [];
 
     #[On('isVisibleAssignPermissionModal')]
     public function setModalVariable($value){
@@ -92,7 +94,6 @@ class AssignPermissionToRolesComponent extends Component
             }
         }else{
             $this->AdminGlobal = $currentRole;
-            // dd($this->AdminGlobal);
         }
 
         if (is_null($bestMatchAdmin)) {
@@ -105,6 +106,7 @@ class AssignPermissionToRolesComponent extends Component
         $this->roleId = $dict['selectedRole'];
         $this->selectedRole = $dict['selectedRole'];
         $this->selectedPermissions = $dict['selectedPermissions'];
+        $this->initialPermissions = $this->selectedPermissions;
 
         $role = Role::where('id', $this->roleId['id'])->first();
         $this->name = $role->name;
@@ -116,9 +118,26 @@ class AssignPermissionToRolesComponent extends Component
     {
         $this->selectedPermissions = array_map('intval', $this->selectedPermissions);
         
+        $initial = $this->initialPermissions;
+        $current = $this->selectedPermissions;
+        sort($initial);
+        sort($current);
+
+        if ($initial == $current) {
+            Flux::toast('No se realizaron cambios en los permisos.', 'Información');
+            $this->dispatch('MediatorSetModalFalse', 'isVisibleAssignPermissionModal');
+            $this->dispatch('escape-enabled');
+            return;
+        }
+
         if ($this->selectedRole) {
             $role = Role::findOrFail($this->roleId['id']);
-            $role->syncPermissions($this->selectedPermissions);
+            
+            $changes = $role->syncPermissions($this->selectedPermissions);
+
+            if (!empty($changes['attached']) || !empty($changes['detached'])) {
+                $role->touch();
+            }
             
             if (!is_null($this->AdminGlobal)) {
                 $baseRoleName = str_replace('admin-', '', $this->AdminGlobal);
@@ -127,19 +146,24 @@ class AssignPermissionToRolesComponent extends Component
                                 ->where('name', '!=', $this->AdminGlobal)
                                 ->get();
                 
+                DB::beginTransaction();
                 foreach ($relatedRoles as $relatedRole) {
-                    // Obtener permisos actuales del rol relacionado
                     $currentPermissions = $relatedRole->permissions->pluck('id')->toArray();
-                    
-                    // Quitar permisos que NO están en selectedPermissions
                     $permissionsToKeep = array_intersect($currentPermissions, $this->selectedPermissions);
                     
-                    // Sincronizar solo los permisos que deben mantenerse
-                    $relatedRole->syncPermissions($permissionsToKeep);
+                    // Aplica la misma lógica para los roles relacionados
+                    $relatedChanges = $relatedRole->syncPermissions($permissionsToKeep);
+
+                    if (!empty($relatedChanges['attached']) || !empty($relatedChanges['detached'])) {
+                        $relatedRole->touch();
+                    }
                 }
+                DB::commit();
             }
         }
         
+        $this->initialPermissions = $this->selectedPermissions;
+
         Flux::toast('Permisos actualizados para el rol seleccionado');
         $this->dispatch('MediatorSetModalFalse', 'isVisibleAssignPermissionModal');
         $this->dispatch('escape-enabled');

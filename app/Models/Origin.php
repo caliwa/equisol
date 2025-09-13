@@ -39,6 +39,7 @@ class Origin extends Model implements AuditableInterface
     public function transitModes(): BelongsToMany
     {
         return $this->belongsToMany(TransitMode::class)
+                    ->using(OriginTransitMode::class)
                     ->withPivot('days')
                     ->withTimestamps();
     }

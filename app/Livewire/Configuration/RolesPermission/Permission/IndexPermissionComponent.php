@@ -44,8 +44,6 @@ class IndexPermissionComponent extends Component
         $this->dispatch('mediator-mount-open-edit-permission-modal', $mediator_dict);
     }
 
-
-
     #[On('DeletePermission')]
     public function DeletePermission($permissionId)
     {
@@ -57,7 +55,6 @@ class IndexPermissionComponent extends Component
         
         Flux::toast('Permiso eliminado correctamente!');
     }
-
 
     public function render()
     {

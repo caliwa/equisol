@@ -8,6 +8,8 @@ use App\Contracts\AuditableInterface;
 use App\Observers\AuditObserver;
 use App\Traits\AuditableTrait;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 #[ObservedBy(AuditObserver::class)]
 class Role extends SpatieRole implements AuditableInterface
@@ -22,5 +24,14 @@ class Role extends SpatieRole implements AuditableInterface
         'updated',
         'deleted'
     ];
-    
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            config('permission.models.permission'),
+            config('permission.table_names.role_has_permissions'),
+            config('permission.column_names.role_pivot_key') ?: 'role_id',
+            config('permission.column_names.permission_pivot_key') ?: 'permission_id'
+        )->using(RolePermission::class);
+    }
 }

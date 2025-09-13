@@ -5,7 +5,6 @@ namespace App\Livewire\Calculation\Transit;
 use Flux\Flux;
 use App\Models\Origin;
 use Livewire\Component;
-
 use App\Models\TransitMode;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Isolate;
@@ -24,6 +23,7 @@ class TransitTimeManagerComponent extends Component
     public $origins;
     public $transitModes;
     public $transitData = [];
+    public $initialTransitData = [];
 
     public $isVisibleIndexTransitTimeManagerComponent = false;
 
@@ -38,9 +38,7 @@ class TransitTimeManagerComponent extends Component
     public function mount_artificially($dict){
         $this->zIndexModal = $dict['zIndexModal'];
         $this->loadData();
-
         $this->isVisibleIndexTransitTimeManagerComponent = true;
-        
         $this->dispatch('escape-enabled');
     }
 
@@ -48,7 +46,7 @@ class TransitTimeManagerComponent extends Component
     {
         $this->transitModes = TransitMode::all();
         $this->origins = Origin::with('transitModes')->orderBy('name')->get();
-     
+
         foreach ($this->origins as $origin) {
             foreach ($this->transitModes as $mode) {
                 $transitRelation = $origin->transitModes->firstWhere('id', $mode->id);
@@ -56,11 +54,20 @@ class TransitTimeManagerComponent extends Component
                 $this->transitData[$origin->id][$mode->id] = $days;
             }
         }
+        
+        $this->initialTransitData = $this->transitData;
     }
 
+// en TransitTimeManagerComponent.php
 
     public function saveTransitTimes()
     {
+        if ($this->transitData == $this->initialTransitData) {
+            Flux::toast('No se han realizado cambios.', 'Información');
+            $this->dispatch('escape-enabled');
+            return;
+        }
+
         try {
             $this->validate([
                 'transitData.*.*' => 'nullable|numeric|min:0|integer|max:999999',
@@ -82,7 +89,6 @@ class TransitTimeManagerComponent extends Component
             return;
         }
 
-
         DB::beginTransaction();
         foreach ($this->origins as $origin) {
             $dataToSync = [];
@@ -97,11 +103,10 @@ class TransitTimeManagerComponent extends Component
             $origin->transitModes()->sync($dataToSync);
         }
         DB::commit();
-
+        
+        $this->initialTransitData = $this->transitData;
         $this->dispatch('escape-enabled');
-
         Flux::toast('¡Tiempos de tránsito actualizados con éxito!', 'Éxito');
-
     }
 
     public function ResetModalVariables(){

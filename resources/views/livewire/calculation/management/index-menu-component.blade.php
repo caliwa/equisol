@@ -508,7 +508,6 @@
                                         <flux:select x-on:change="loadingSpinner($event); $wire.saveNewCurrencyMaster();" 
                                             wire:model.live="service_currencies.{{ $column['id'] }}"
                                             >
-                                            <flux:select.option value="">Sin Moneda</flux:select.option>
                                             @foreach($currencies as $currency)
                                                 <flux:select.option
                                                     wire:key="currency-{{ $currency['id'] }}"

@@ -6,28 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-use App\Contracts\AuditableInterface;
-use App\Observers\AuditObserver;
-use App\Traits\AuditableTrait;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-#[ObservedBy(AuditObserver::class)]
-class TransitMode extends Model implements AuditableInterface
+class TransitMode extends Model
 {
-    use HasFactory, AuditableTrait;
+    use HasFactory;
 
     protected $fillable = ['name'];
-    protected $auditableFields = ['name'];
-
-    protected array $auditableEvents = [
-        'created',
-        'updated',
-        'deleted'
-    ];
 
     public function origins(): BelongsToMany
     {
         return $this->belongsToMany(Origin::class)
+                    ->using(OriginTransitMode::class)
                     ->withPivot('days')
                     ->withTimestamps();
     }

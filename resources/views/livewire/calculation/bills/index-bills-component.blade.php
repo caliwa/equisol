@@ -90,14 +90,12 @@ x-on:x-unblock-open-quote-generic-figure-modal.window="
                                             {{ $item['concept'] }}
                                         </div>
                                     </flux:tooltip>
-
                             </flux:table.cell>
 
                             <flux:table.cell>
                                 <flux:select 
                                     x-on:change="loadingSpinner($event); $wire.saveNewCurrencyMaster({{$index}});"
                                     wire:model="costItems.{{ $index }}.currency_id">
-                                    <flux:select.option value="">N/A</flux:select.option>
                                     @foreach($currencies as $currency)
                                         <flux:select.option value="{{ $currency['id'] }}">{{ $currency['code'] }}</flux:select.option>
                                     @endforeach
